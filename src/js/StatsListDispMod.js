@@ -1,5 +1,5 @@
 // This is a display module, the view in an MVC design pattern.
-import { getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
+import { getRequestedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
 
 class StatsList {
     constructor(controller) {
@@ -19,32 +19,29 @@ class StatsList {
     onCreate() {
         // Make initial call to API for yesterday's date. Wait for results before building screen.
         const offsetDayCount = -1;
-        this.controller.requestData(this, 'receiveStatsData', 'getStats', offsetDayCount, this.currentDate);
-        this.currentDate.setDate(this.currentDate.getDate() + offsetDayCount);
-        // this.controller.requestData(this, 'receiveStatsData', 'getStats', -1, new Date('2018-11-12')); // Sample date with no games.
-/*         let self = this;
-        setTimeout(function() {
-            console.log('In display mod, data is', self.data);
-            // Build the UI.
-            self.buildDateButtons();
-            self.buildGrid();
-        }, 1000); */
-
+        this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
+        this.controller.requestData(this, 'receiveStatsData', 'getStats', 0, this.currentDate);
     }
-
+    
+    /**
+     * The Controller invokes this method when asynchronous MLB stats data has been retrieved.
+     * @param {Object} result - JSON object containing MLB stats data. 
+     */
+    receiveStatsData(result) {
+        console.log('In display mod receiveStatsData(), result is:', result);
+        // Update our instance variable with the data returned by the Controller.
+        this.data = result;
+        
+        // Build the UI.
+        this.buildDateButtons();
+        this.buildGrid();
+    }
+    
     /**
      * Adds previous and next date buttons to the screen allowing for other stats to be loaded.
      */
     buildDateButtons() {
         // Extra credit feature.
-    }
-
-    receiveStatsData(result) {
-        console.log('In display mod receiveStatsData(), result is (and build mod):', result);
-        this.data = result;
-        // Build the UI.
-        this.buildDateButtons();
-        this.buildGrid();
     }
 
     /**
@@ -176,9 +173,8 @@ class StatsList {
     }
 
     /**
-     * After the display module has focus, it will call this internal method when a left or right arrow key is pressed, to: 
-         * (A) shift the grid over one game cell, 
-         * (B) remove focus from the previous game cell and add it to the newly focused game cell. 
+     * After the display module has focus, it will call this internal method to remove focus from the div
+     * that is currently focused and to grant focus to the div we are moving toward. 
      * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
      */
     updateFocus(eventKeyName) {

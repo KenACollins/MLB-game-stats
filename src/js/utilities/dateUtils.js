@@ -36,7 +36,7 @@ const getApiFormattedDate = (inputDate = new Date()) => {
  */
 const getUserFriendlyDateFromApiDate = (dateString = '') => {
     if (dateString === '') { return ''; }
-    return new Date(dateString).toDateString();
+    return new Date(dateString.replace(/-/g, '\/')).toDateString(); // Weird, but yyyy-mm-dd gives previous date between 12-5 AM while yyyy/mm/dd does not.
 };
 
 export { getRequestedDate, getApiFormattedDate, getUserFriendlyDateFromApiDate };
