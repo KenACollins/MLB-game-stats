@@ -20,7 +20,8 @@ class StatsList {
         // Make initial call to API for yesterday's date. Wait for results before building screen.
         const offsetDayCount = -1;
         this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
-        this.controller.requestData(this, 'receiveStatsData', 'getStats', 0, this.currentDate);
+        // console.log("What is today?", this.currentDate.toDateString());
+        this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
     }
     
     /**
