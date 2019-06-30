@@ -10,7 +10,6 @@ class StatsList {
         this.gamesMetadata = [];
         this.isModalDisplayed = false;
         this.data = null;
-        //this.json = '';
     }
     
     /**
@@ -20,7 +19,6 @@ class StatsList {
         // Make initial call to API for yesterday's date. Wait for results before building screen.
         const offsetDayCount = -1;
         this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
-        // console.log("What is today?", this.currentDate.toDateString());
         this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
     }
     
@@ -72,10 +70,12 @@ class StatsList {
                 let gameCaptions = document.createElement('div');
                 gameCaptions.classList.add('gameCaptions');
                 let homeTeamNode = document.createElement('p');
+                homeTeamNode.classList.add('hiddenCaption');
                 let homeTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].homeTeam.name}: ${this.gamesMetadata[gameIndex].homeTeam.score}`);
                 homeTeamNode.appendChild(homeTeamText);
                 gameCaptions.appendChild(homeTeamNode);
                 let awayTeamNode = document.createElement('p');
+                awayTeamNode.classList.add('hiddenCaption');
                 let awayTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].awayTeam.name}: ${this.gamesMetadata[gameIndex].awayTeam.score}`);
                 awayTeamNode.appendChild(awayTeamText);
                 gameCaptions.appendChild(awayTeamNode);
@@ -87,17 +87,18 @@ class StatsList {
                     game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
                     game.content.editorial.recap.mlb.image.cuts) 
                 {
-                        countRecaps++;
-                        let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
-                        let imageElement = document.createElement('img')
-                        imageElement.src = desiredImageSrc;
-                        gameCell.appendChild(imageElement);
+                    countRecaps++;
+                    let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
+                    let imageElement = document.createElement('img')
+                    imageElement.src = desiredImageSrc;
+                    gameCell.appendChild(imageElement);
                 }
                 
                 gameCaptions.appendChild(gameCell);
 
                 let headlineNode = document.createElement('p');
-                // headlineNode.classList.add('hiddenCaption');
+                headlineNode.classList.add('desc');
+                headlineNode.classList.add('hiddenCaption');
                 let headlineText = document.createTextNode(this.gamesMetadata[gameIndex].headline);
                 headlineNode.appendChild(headlineText);
                 gameCaptions.appendChild(headlineNode);
@@ -154,15 +155,17 @@ class StatsList {
                 else { this.updateFocus(eventKeyName); }
                 break;
             case 'ArrowRight': 
-                // If this.currentIndex === last game index (this.data.dates[0].games.length - 1)
-                // return false, else...
-                this.updateFocus(eventKeyName);
+                if (this.currentIndex === this.maxIndex) { return false; }
+                else { this.updateFocus(eventKeyName); }
                 break;
             case 'ArrowUp':
+                // TODO: Logic to check if at top of module, return false. Else...
+                this.updateFocus(eventKeyName);
+                break;
             case 'ArrowDown':
-                // TODO: Relevant once I add support for going up to and down from date buttons.
-                return false;
-                //break;
+                // TODO: Logic to check if at bottom of module, return false. Else...
+                this.updateFocus(eventKeyName);
+                break;
             case 'Escape':
                 if (this.isModalDisplayed) {
                     // TODO: Remove details modal dialog if displayed.
@@ -179,6 +182,12 @@ class StatsList {
      * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
      */
     updateFocus(eventKeyName) {
+        /**
+         * Notes to self:
+         * 7 games per row before wrapping so...
+         * o If press up and index ID of game is greater than 7, subtract 7 to get the ID of the div to gain focus. Else, ignore key press.
+         * o If press down and index ID of game + 7 is less than this.maxIndex, then add 7 to current index ID to get the new div to gain focus.
+         */
         switch (eventKeyName) {
             case 'ArrowLeft':
                 break;
@@ -194,6 +203,13 @@ class StatsList {
                 nextElement.style.width = (parseFloat(previousWidth, 10) * 1.5) + 'px';
                 nextElement.style.height = (parseFloat(previousHeight, 10) * 1.5) + 'px';
                 nextElement.style.border = 'solid 5px red';
+                let headlineNode = nextElement.nextSibling;
+                headlineNode.style.width = (parseFloat(previousWidth, 10) * 1.5) + 'px';
+                headlineNode.classList.remove('hiddenCaption');
+                let awayElement = nextElement.previousSibling;
+                awayElement.classList.remove('hiddenCaption');
+                let homeElement = nextElement.previousSibling.previousSibling;
+                homeElement.classList.remove('hiddenCaption');
                 break;
             default:
                 return false;

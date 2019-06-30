@@ -34,6 +34,13 @@ h4 {
     display: inline-block;
 }
 
+/* .gameCaptions p {
+    visibility: hidden;
+} */
+p.desc {
+    width: 200px;
+}
+
 .hiddenCaption {
     visibility: hidden;
 }
