@@ -30,4 +30,13 @@ const getApiFormattedDate = (inputDate = new Date()) => {
     return yearString + delimiter + monthString + delimiter + dateString;
 }; 
 
-export { getRequestedDate, getApiFormattedDate };
+/**
+ * Converts API date formatted string from yyyy-mm-dd to a user friendly value, eg., "Thu Jun 27 2019".
+ * @param {String} dateString - in yyyy-mm-dd format 
+ */
+const getUserFriendlyDateFromApiDate = (dateString = '') => {
+    if (dateString === '') { return ''; }
+    return new Date(dateString).toDateString();
+};
+
+export { getRequestedDate, getApiFormattedDate, getUserFriendlyDateFromApiDate };

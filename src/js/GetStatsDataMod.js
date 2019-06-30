@@ -1,3 +1,4 @@
+// This is a data module, the model in an MVC design pattern. 
 import { getRequestedDate, getApiFormattedDate } from './utilities/dateUtils.js';
 
 const getStats = async (offsetDayCount = 0, referenceDate = new Date()) => {
