@@ -12,6 +12,7 @@ const GAME_CAPTIONS_ID_PREFIX = 'captions';     // Unique string prepended along
 const GAME_IMAGE_ID_PREFIX = 'image';           // Unique string prepended along with the index position of the game image being added to the DOM.
 const PREVIOUS_DATE_BUTTON_ID = 'prevDate';
 const NEXT_DATE_BUTTON_ID = 'nextDate';
+const DEFAULT_DATE_BUTTON_ID = 'prevDate';      // ID of the date button that will gain focus by default on an up key press from the grid.
 
 class StatsList {
 
@@ -186,7 +187,18 @@ class StatsList {
                 game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
                 game.content.editorial.recap.mlb.image.cuts) 
             {
-                let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
+                /**
+                 * It is better to load the larger image size for the focused state and just shrink it when displaying it in smaller unfocused thumbnail
+                 * state than to load the smaller image and stretch it for the larger state. The latter situation causes pixelation. However, this is not 
+                 * a cut and dry solution - the proper approach depends on the requirements. In our case, the focused image size is only 150% of the 
+                 * unfocused image size, so this 'load the larger image and shrink it for the thumbnail' approach works.
+                 * 
+                 * If instead, the focused image size were significantly larger than the thumbnail, like 500%, it could be a performance issue to load every
+                 * game image at this much higher resolution. If there are 15 games, that is a lot of bandwidth to load images that the user may not choose
+                 * to focus on. In a case like that, it might be preferable to just load all images in the unfocused thumbnail size and then only fetch the 
+                 * larger size on demand when the user has shifted focus.
+                 */
+                let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[API_FOCUSED_IMAGE_INDEX].src;
                 let imageElement = document.createElement('img')
                 imageElement.src = desiredImageSrc;
                 gameImage.appendChild(imageElement);
@@ -240,6 +252,8 @@ class StatsList {
      */
     onKeyPress(eventKeyName) {
         // console.log('In StatsList disp mod onKeyPress:', eventKeyName);
+        const removeFocusOnly = true;
+
         switch (eventKeyName) {
             case 'ArrowLeft':
                 if (this.gridHasFocus) {
@@ -258,7 +272,7 @@ class StatsList {
                 }
                 else {  // Date buttons have focus.
                     if (this.buttonIdHasFocus === NEXT_DATE_BUTTON_ID) { return false; }
-                    else { this.toggleDateButtonsFocus(); }
+                    else { this.updateDateButtonsFocus(eventKeyName); }
                 }
                 break;
             case 'ArrowUp':
@@ -267,8 +281,8 @@ class StatsList {
                         this.updateGridFocus(eventKeyName);
                     }
                     else {  
-                        this.removeGridFocus();
-                        setDefaultDateButtonFocus();
+                        this.updateGridFocus(eventKeyName, removeFocusOnly);
+                        this.updateDateButtonsFocus(eventKeyName);
                     }
                 }
                 else {  // Date buttons have focus.
@@ -276,8 +290,18 @@ class StatsList {
                 }    
                 break;
             case 'ArrowDown':
-                // TODO: Logic to check if at bottom of module, return false. Else...
-                this.updateGridFocus(eventKeyName);
+                if (this.gridHasFocus) {
+                    if (this.currentIndex + MAX_GAME_CELLS_PER_ROW <= this.maxIndex) {
+                        this.updateGridFocus(eventKeyName);
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else {  // Date buttons have focus.
+                    this.updateDateButtonsFocus(eventKeyName);
+                    this.updateGridFocus(eventKeyName);
+                }
                 break;
             case 'Enter':
                 // TODO: Process.    
@@ -300,11 +324,6 @@ class StatsList {
      * @param {Boolean} removeFocusOnly - If true, grid will lose focus so that date buttons can gain focus.
      */
     updateGridFocus(eventKeyName, removeFocusOnly = false) {
-        if (removeFocusOnly) {
-            this.removeGridFocus();
-            return;
-        }
-
         let nextIndex = null;
 
         switch (eventKeyName) {
@@ -315,21 +334,27 @@ class StatsList {
                 nextIndex = this.currentIndex + 1;
                 break;
             case 'ArrowUp':
-                nextIndex = this.currentIndex - MAX_GAME_CELLS_PER_ROW;
+                if (removeFocusOnly === false) {
+                    nextIndex = this.currentIndex - MAX_GAME_CELLS_PER_ROW;
+                }
                 break;
             case 'ArrowDown':
-                if (this.currentIndex + MAX_GAME_CELLS_PER_ROW <= this.maxIndex) {
+                if (this.gridHasFocus) {
                     nextIndex = this.currentIndex + MAX_GAME_CELLS_PER_ROW;
+                }
+                else {  // Grid is gaining focus as user navigates down from date buttons.
+                    nextIndex = this.currentIndex;  // Restore previously focused game index.
                 }
                 break;
             default:
                 return false;
         }
 
-        // If we are moving to a new game cell, remove the current focus and add it to the next one
-        // gaining focus. Otherwise, we have clicked farther than we can go. Keep the focus we have.
+        // We are definitely removing the current focus in the grid no matter what.
+        this.removeGridFocus();
+            
+        // If we are moving to a new game cell, give it focus.
         if (nextIndex !== null) {
-            this.removeGridFocus();
             this.currentIndex = nextIndex;
             this.addGridFocus();
         }
@@ -339,6 +364,9 @@ class StatsList {
      * Removes focus from the game in the grid that currently has focus.
      */
     removeGridFocus() {
+        // If grid does not have focus because user is navigating down to grid from date buttons, there is nothing to do.
+        if (this.gridHasFocus === false) { return; }
+
         // Hide the captions above and below the game image.
         let currentGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
         currentGameCaptions.classList.add('hiddenCaption');
@@ -391,25 +419,33 @@ class StatsList {
      * this method will be called to remove focus from the date button that is currently focused and to 
      * grant focus to the date button that user is moving toward. 
      * @param {String} eventKeyName - One of the following keys: 'ArrowLeft', 'ArrowRight', or 'ArrowDown'.
-     * @param {Boolean} removeFocusOnly - If true, date buttons will lose focus so that grid can gain focus.
      */
-    updateDateButtonsFocus(eventKeyName, removeFocusOnly = false) {
-        if (removeFocusOnly) {
-            this.removeDateButtonsFocus();
-            return;
-        }
+    updateDateButtonsFocus(eventKeyName) {
+        let nextButtonId = null;
 
         switch (eventKeyName) {
             case 'ArrowLeft':
+                nextButtonId = PREVIOUS_DATE_BUTTON_ID;
                 break;
             case 'ArrowRight':
+                nextButtonId = NEXT_DATE_BUTTON_ID;
                 break;
             case 'ArrowUp':
+                nextButtonId = DEFAULT_DATE_BUTTON_ID;
                 break;
             case 'ArrowDown':
                 break;
             default:
                 return false;
+        }
+
+        // We are definitely removing the current focus in the date buttons no matter what.
+        this.removeDateButtonsFocus();
+
+        // If we are moving to a new date button, give it focus.
+        if (nextButtonId !== null) {
+            this.buttonIdHasFocus = nextButtonId;
+            this.addDateButtonsFocus();
         }
     }
 
