@@ -9,8 +9,8 @@ p {
 /* Headline at top of screen */
 h4 {
     position: relative;
-    top: 50px;
-    left: 90px;
+    top: 70px;
+    left: 60px;
 }
 
 /* Background image spanning entire screen. Assigned to root element. */
@@ -30,10 +30,20 @@ h4 {
     top: 0;
 }
 
+.dateButtons {
+    position: relative;
+    top: 40px;
+    left: 60px;
+}
+
+#nextDate {
+    margin-left: 30px;
+}
+
 /* Represents all of the game elements spanning multiple rows based on number of games. */
 .gamesRow {
     position: relative;
-    top: 150px;
+    top: 100px;
     left: 60px;
 }
 

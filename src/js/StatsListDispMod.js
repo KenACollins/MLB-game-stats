@@ -10,6 +10,8 @@ const FOCUSED_IMAGE_HEIGHT = '180px';
 const MAX_GAME_CELLS_PER_ROW = 7;               // Based on the sizes chosen for the game cells, this is the number that fit on a 1080 screen.
 const GAME_CAPTIONS_ID_PREFIX = 'captions';     // Unique string prepended along with the index position of the game captions being added to the DOM.
 const GAME_IMAGE_ID_PREFIX = 'image';           // Unique string prepended along with the index position of the game image being added to the DOM.
+const PREVIOUS_DATE_BUTTON_ID = 'prevDate';
+const NEXT_DATE_BUTTON_ID = 'nextDate';
 
 class StatsList {
 
@@ -42,92 +44,166 @@ class StatsList {
         // Update our instance variable with the data returned by the Controller.
         this.data = result;
         
-        // Build the UI.
-        this.buildDateButtons();
-        this.buildGrid();
+        // Set up the overall containers.
+        const rootElement = document.createElement('div');
+        rootElement.classList.add('bgImage');
+        const gamesContainer = document.createElement('div');
+        gamesContainer.classList.add('gamesContainer');
+
+        // Add date buttons, header, and grid to the screen.
+        gamesContainer.appendChild(this.buildDateButtons());
+        gamesContainer.appendChild(this.buildHeader());
+        gamesContainer.appendChild(this.buildGrid());
+
+        // Wrap up the overall containers.
+        rootElement.appendChild(gamesContainer);
+        document.body.appendChild(rootElement);
+
+        // Apply focus to the first game.
+        this.addGameRowFocus();
     }
     
     /**
      * Adds previous and next date buttons to the screen allowing for other stats to be loaded.
      */
     buildDateButtons() {
-        // Extra credit feature.
+        /*
+        <a class="waves-effect waves-light btn-large"><i class="material-icons left">chevron_left</i>Previous Date</a>
+        <a class="waves-effect waves-light btn-large"><i class="material-icons right">chevron_right</i>Next Date</a>
+        */
+        //=================
+        // Create Container
+        //=================
+        // Define the container for the date buttons.
+        const dateButtonsDiv = document.createElement('div');
+        dateButtonsDiv.classList.add('dateButtons');
+
+        //=====================
+        // Previous Date Button
+        //=====================
+        // Define the previous date button. Apply material design styling.
+        const prevDateButton = document.createElement('a');
+        prevDateButton.id = PREVIOUS_DATE_BUTTON_ID;
+        prevDateButton.classList.add('waves-effect', 'waves-light', 'btn-large');
+        const prevDateButtonText = document.createTextNode('Previous Date');
+
+        // Define the icon to be placed inside the previous date button.
+        const iconLeft = document.createElement('i');
+        iconLeft.classList.add('material-icons', 'left');
+        const iconLeftText = document.createTextNode('chevron_left');
+        iconLeft.appendChild(iconLeftText);
+
+        // Insert child nodes within previous date button.
+        prevDateButton.appendChild(iconLeft);
+        prevDateButton.appendChild(prevDateButtonText);
+
+        //=================
+        // Next Date Button
+        //=================
+        // Define the next date button. Apply material design styling.
+        const nextDateButton = document.createElement('a');
+        nextDateButton.id = NEXT_DATE_BUTTON_ID;
+        nextDateButton.classList.add('waves-effect', 'waves-light', 'btn-large');
+        const nextDateButtonText = document.createTextNode('Next Date');
+
+        // Define the icon to be placed inside the next date button.
+        const iconRight = document.createElement('i');
+        iconRight.classList.add('material-icons', 'right');
+        const iconRightText = document.createTextNode('chevron_right');
+        iconRight.appendChild(iconRightText);
+
+        // Insert child nodes within next date button.
+        nextDateButton.appendChild(iconRight);
+        nextDateButton.appendChild(nextDateButtonText);
+
+        //==============================
+        // Finalize and Return Container
+        //==============================
+        // Add previous and next date buttons to container and return it to caller.
+        dateButtonsDiv.appendChild(prevDateButton);
+        dateButtonsDiv.appendChild(nextDateButton);
+        return dateButtonsDiv;
+    }
+
+    /**
+     * Builds the header that appears above the grid, for example:
+     * "Stats for Sat Jun 29 2019: 15 total games, 15 editorial recaps available:".
+     */
+    buildHeader() {
+        if (!this.data) { return null; }
+
+        const header = document.createElement('h4');
+        let headerText = null;
+        
+        if (this.data.totalGames === 0) {
+            headerText = document.createTextNode("We're sorry, there is no data available for the date you requested.");
+        }
+        else {
+            let countRecaps = 0;
+            this.data.dates[0].games.forEach(game => {
+                if (game.content && game.content.editorial && game.content.editorial.recap && game.content.editorial.recap.mlb) {
+                    countRecaps++;
+                }
+            });
+            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial recaps available:`);
+        }
+
+        header.appendChild(headerText);
+        return header;
     }
 
     /**
      * Builds the main part of the UI, the statistics grid.
      */
     buildGrid() {
-        if (!this.data) { return; }
+        if (!this.data || this.data.totalGames === 0) { return null; }
 
-        const rootElement = document.createElement('div');
-        rootElement.classList.add('bgImage');
-        const gamesContainer = document.createElement('div');
-        gamesContainer.classList.add('gamesContainer');
-        const header = document.createElement('h4');
         const gamesRow = document.createElement('div');
         gamesRow.classList.add('gamesRow');
-        let headerText = null;
-        if (this.data.totalGames === 0) {
-            headerText = document.createTextNode("We're sorry, there is no data available for the date you requested.");
-        }
-        else {
-            this.maxIndex = this.data.totalGames - 1;
-            let gameIndex = -1;
-            let countRecaps = 0;
-            this.data.dates[0].games.forEach(game => {
-                this.storeMetadata(game);
-                gameIndex++;
-                let gameCaptions = document.createElement('div');
-                gameCaptions.id = `${GAME_CAPTIONS_ID_PREFIX}${gameIndex}`;     // Example: captions0 or captions14.
-                gameCaptions.classList.add('gameCaptions', 'hiddenCaption');     // COMPATIBILITY WARNING: IE does not support adding multiple CSS classes in one line.
-                let homeTeamNode = document.createElement('p');
-                //homeTeamNode.classList.add('hiddenCaption');
-                let homeTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].homeTeam.name}: ${this.gamesMetadata[gameIndex].homeTeam.score}`);
-                homeTeamNode.appendChild(homeTeamText);
-                gameCaptions.appendChild(homeTeamNode);
-                let awayTeamNode = document.createElement('p');
-                //awayTeamNode.classList.add('hiddenCaption');
-                let awayTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].awayTeam.name}: ${this.gamesMetadata[gameIndex].awayTeam.score}`);
-                awayTeamNode.appendChild(awayTeamText);
-                gameCaptions.appendChild(awayTeamNode);
-                let gameImage = document.createElement('div');
-                gameImage.classList.add('gameImage');
-                gameImage.id = `${GAME_IMAGE_ID_PREFIX}${gameIndex}`;     // Example: image0 or image14.
 
-                if (game.content && game.content.editorial && game.content.editorial.recap && 
-                    game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
-                    game.content.editorial.recap.mlb.image.cuts) 
-                {
-                    countRecaps++;
-                    let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
-                    let imageElement = document.createElement('img')
-                    imageElement.src = desiredImageSrc;
-                    gameImage.appendChild(imageElement);
-                }
-                
-                gameCaptions.appendChild(gameImage);
+        this.currentIndex = 0;
+        this.maxIndex = this.data.totalGames - 1;
+        let gameIndex = -1;
+        this.data.dates[0].games.forEach(game => {
+            this.storeMetadata(game);
+            gameIndex++;
+            let gameCaptions = document.createElement('div');
+            gameCaptions.id = `${GAME_CAPTIONS_ID_PREFIX}${gameIndex}`;     // Example: captions0 or captions14.
+            gameCaptions.classList.add('gameCaptions', 'hiddenCaption');     // COMPATIBILITY WARNING: IE does not support adding multiple CSS classes in one line.
+            let homeTeamNode = document.createElement('p');
+            let homeTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].homeTeam.name}: ${this.gamesMetadata[gameIndex].homeTeam.score}`);
+            homeTeamNode.appendChild(homeTeamText);
+            gameCaptions.appendChild(homeTeamNode);
+            let awayTeamNode = document.createElement('p');
+            let awayTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].awayTeam.name}: ${this.gamesMetadata[gameIndex].awayTeam.score}`);
+            awayTeamNode.appendChild(awayTeamText);
+            gameCaptions.appendChild(awayTeamNode);
+            let gameImage = document.createElement('div');
+            gameImage.classList.add('gameImage');
+            gameImage.id = `${GAME_IMAGE_ID_PREFIX}${gameIndex}`;     // Example: image0 or image14.
 
-                let headlineNode = document.createElement('p');
-                headlineNode.classList.add('desc');
-                //headlineNode.classList.add('hiddenCaption');
-                let headlineText = document.createTextNode(this.gamesMetadata[gameIndex].headline);
-                headlineNode.appendChild(headlineText);
-                gameCaptions.appendChild(headlineNode);
-                gamesRow.appendChild(gameCaptions);
-            });
+            if (game.content && game.content.editorial && game.content.editorial.recap && 
+                game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
+                game.content.editorial.recap.mlb.image.cuts) 
+            {
+                let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
+                let imageElement = document.createElement('img')
+                imageElement.src = desiredImageSrc;
+                gameImage.appendChild(imageElement);
+            }
             
-            //console.log('gamesMetadata array', this.gamesMetadata);
-            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial recaps available:`);
-        }
-        header.appendChild(headerText);
-        gamesContainer.appendChild(header);
-        gamesContainer.appendChild(gamesRow);
-        rootElement.appendChild(gamesContainer);
-        document.body.appendChild(rootElement);
+            gameCaptions.appendChild(gameImage);
 
-        // Apply focus to the first game.
-        this.addGameRowFocus();
+            let headlineNode = document.createElement('p');
+            headlineNode.classList.add('desc');
+            let headlineText = document.createTextNode(this.gamesMetadata[gameIndex].headline);
+            headlineNode.appendChild(headlineText);
+            gameCaptions.appendChild(headlineNode);
+            gamesRow.appendChild(gameCaptions);
+        });
+        
+        //console.log('gamesMetadata array', this.gamesMetadata);
+        return gamesRow;
     }
 
     storeMetadata(game) {
