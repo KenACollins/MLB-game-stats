@@ -1,18 +1,26 @@
 // This is a display module, the view in an MVC design pattern.
 import { getRequestedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
 
+// Index Constants
 const API_UNFOCUSED_IMAGE_INDEX = 16;           // From API: Image cut in index position 16 matches what we want for unfocused game cells: 209 x 118px.
 const API_FOCUSED_IMAGE_INDEX = 12;             // From API: Image cut in index position 12 matches what we want for focused game cells: 320 x 180px.
+
+// Game Constants
 const UNFOCUSED_IMAGE_WIDTH = '209px';
 const UNFOCUSED_IMAGE_HEIGHT = '118px';
 const FOCUSED_IMAGE_WIDTH = '320px';
 const FOCUSED_IMAGE_HEIGHT = '180px';
 const MAX_GAME_CELLS_PER_ROW = 7;               // Based on the sizes chosen for the game cells, this is the number that fit on a 1080 screen.
+const NO_SCORE = 'No Score';
+
+// ID Constants
+const DISPLAY_MODULE_ID = 'gamesContainer';     // ID of the top level DOM element created by this display module, not to be confused with the true root
+                                                // attached to body tag by the Controller which is passed to this display module.
 const GAME_CAPTIONS_ID_PREFIX = 'captions';     // Unique string prepended along with the index position of the game captions being added to the DOM.
 const GAME_IMAGE_ID_PREFIX = 'image';           // Unique string prepended along with the index position of the game image being added to the DOM.
 const PREVIOUS_DATE_BUTTON_ID = 'prevDate';
 const NEXT_DATE_BUTTON_ID = 'nextDate';
-const DEFAULT_DATE_BUTTON_ID = 'prevDate';      // ID of the date button that will gain focus by default on an up key press from the grid.
+const DEFAULT_DATE_BUTTON_ID = 'prevDate';      // ID of the date button that will gain focus by default on an up key press from the grid. 
 
 class StatsList {
 
@@ -34,8 +42,8 @@ class StatsList {
      */
     onCreate() {
         // Make initial call to API for yesterday's date. Wait for results before building screen.
-        const offsetDayCount = -1;
-        this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
+        //const offsetDayCount = -1;
+        //this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
         this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
     }
     
@@ -45,23 +53,41 @@ class StatsList {
      */
     receiveStatsData(result) {
         console.log('In display mod receiveStatsData(), result is:', result);
-        // Update our instance variable with the data returned by the Controller.
-        this.data = result;
+        this.data = result;         // Update our instance variable with the data returned by the Controller.
+        this.buildDisplayModule();  // Build (or rebuild) the display module based on the newly retrieved data.
+
+    }
+    
+    buildDisplayModule() {
+        if (!this.data) { return; }
+        
+        // Delete previous state of the display module if the date buttons were clicked.
+        const displayModuleTopElement = document.getElementById(DISPLAY_MODULE_ID);
+        if (displayModuleTopElement !== null) {
+            displayModuleTopElement.parentNode.removeChild(displayModuleTopElement);
+            this.gamesMetadata.splice(0, this.gamesMetadata.length);    // Empty array of previous metadata.
+        }
         
         // Estabish top level container for our display module.
         const gamesContainer = document.createElement('div');
+        gamesContainer.id = DISPLAY_MODULE_ID;
         gamesContainer.classList.add('gamesContainer');
-
+    
         // Add date buttons, header, and grid to top level container.
         gamesContainer.appendChild(this.buildDateButtons());
         gamesContainer.appendChild(this.buildHeader());
         gamesContainer.appendChild(this.buildGrid());
-
+    
         // Add top level container to the screen.
         this.rootElement.appendChild(gamesContainer);
-
-        // Apply focus to the first game.
-        this.addGridFocus();
+    
+        // Apply focus.
+        if (this.buttonIdHasFocus === '') {
+            this.addGridFocus();
+        }
+        else {
+            this.addDateButtonsFocus();
+        }
     }
     
     /**
@@ -220,20 +246,34 @@ class StatsList {
 
     storeMetadata(game) {
         let metadataObj = {homeTeam: {name: '', score: ''}, awayTeam: {name: '', score: ''}, headline: ''};
+
         // Home Team
         if (game.teams && game.teams.home && game.teams.home.team && game.teams.home.team.name) {
             metadataObj.homeTeam.name = game.teams.home.team.name;
         }
-        if (game.teams && game.teams.home && typeof game.teams.home.score !== undefined) {
-            metadataObj.homeTeam.score = game.teams.home.score;
+        if (game.teams && game.teams.home) {
+            if (typeof game.teams.home.score !== 'undefined') {
+                metadataObj.homeTeam.score = game.teams.home.score;
+            }
+            else {
+                metadataObj.homeTeam.score = NO_SCORE;
+            }
         }
 
         // Away Team
         if (game.teams && game.teams.away && game.teams.away.team && game.teams.away.team.name) {
             metadataObj.awayTeam.name = game.teams.away.team.name;
         }
-        if (game.teams && game.teams.away && typeof game.teams.away.score !== undefined) {  // Zero score is falsy but we want to record shutouts.
+        if (game.teams && game.teams.away && typeof game.teams.away.score !== 'undefined') {  // Zero score is falsy but we want to record shutouts.
             metadataObj.awayTeam.score = game.teams.away.score;
+        }
+        if (game.teams && game.teams.away) {
+            if (typeof game.teams.away.score !== 'undefined') {
+                metadataObj.awayTeam.score = game.teams.away.score;
+            }
+            else {
+                metadataObj.awayTeam.score = NO_SCORE;
+            }
         }
 
         // Headline
@@ -304,7 +344,23 @@ class StatsList {
                 }
                 break;
             case 'Enter':
-                // TODO: Process.    
+                if (this.gridHasFocus) {
+                    // TODO: Show modal dialog with details on the focused game.
+                }
+                else {  // Date buttons have focus.
+                    if (this.buttonIdHasFocus === PREVIOUS_DATE_BUTTON_ID) {
+                        // Retrieve data for the date BEFORE the one currently being displayed and then rebuild display module.
+                        const offsetDayCount = -1;
+                        this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
+                        this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
+                    }
+                    else if (this.buttonIdHasFocus === NEXT_DATE_BUTTON_ID) {
+                        // Retrieve data for the date AFTER the one currently being displayed and then rebuild display module.
+                        const offsetDayCount = 1;
+                        this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
+                        this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
+                    }
+                }
                 break;    
             case 'Escape':
                 if (this.isModalDisplayed) {
@@ -463,11 +519,20 @@ class StatsList {
     }
 
     /**
-     * Adds focus to the date button that user is moving toward.
+     * Adds focus to the date button that user is moving toward. Called under three circumstances:
+     * o User is moving up to the date buttons from the grid and we will give focus to one button by default.
+     * o User is toggling left and right within the date buttons.
+     * o User pressed Enter key while a date button had focus, the display module was rebuilt after data for
+     *   the newly requested date was available, and we want to restore focus to the button that was clicked
+     *   in case user wants to repeatedly move through dates in succession. For example, grid was initially
+     *   loaded with today's data. User pressed Enter key while previous date button had focus and this caused
+     *   data to be fetched for yesterday's date. User presses Enter again to fetch data for the date before
+     *   yesterday, etc.
      */
     addDateButtonsFocus() {
-        // Technically, the current value of this.buttonIdHasFocus is the ID of the button that will gain focus below.
-        // It was just updated prior to invoking this method.
+        // Technically, the current value of this.buttonIdHasFocus is the ID of the button that WILL GAIN FOCUS below
+        // (was just updated prior to invoking this method) EXCEPT in the situation where we are restoring focus to a 
+        // date button after a display module rebuild.
         const gainingFocusButton = document.getElementById(this.buttonIdHasFocus);
         gainingFocusButton.style.border = 'solid 5px red';
     }

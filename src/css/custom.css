@@ -44,14 +44,19 @@ h4 {
 .gamesRow {
     position: relative;
     top: 100px;
-    left: 60px;
+    left: 60px;         /* Since we are not centering the game cells, provide spacing from left edge of screen. */
+    width: 1860px;      /* Remaining width after subtracting left distance (1920 - 60 = 1860px). We need this or else game cells 
+                           mysteriously wrap to a second row when there are few games, despite room for up to 7 in first row. */
 }
 
 /* The metadata shown above and below the focused game image. */
 .gameCaptions {
     margin-right: 2%;
     margin-bottom: 2%;
-    display: inline-block;
+    display: inline-block;  /* Display game cells next to each other in horizontal rows, up to 7 per row, rather than vertically. 
+                               This is preferable to 'float: left' which causes elements in rows 2 and 3 to jump after focused 
+                               element in prior row. We would need to keep track of when game cells move to successive rows and
+                               clear the float for each new row. */
     text-align: center;
 }
 
