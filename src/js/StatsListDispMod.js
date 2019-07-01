@@ -1,15 +1,26 @@
 // This is a display module, the view in an MVC design pattern.
 import { getRequestedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
 
+const API_UNFOCUSED_IMAGE_INDEX = 16;           // From API: Image cut in index position 16 matches what we want for unfocused game cells: 209 x 118px.
+const API_FOCUSED_IMAGE_INDEX = 12;             // From API: Image cut in index position 12 matches what we want for focused game cells: 320 x 180px.
+const UNFOCUSED_IMAGE_WIDTH = '209px';
+const UNFOCUSED_IMAGE_HEIGHT = '118px';
+const FOCUSED_IMAGE_WIDTH = '320px';
+const FOCUSED_IMAGE_HEIGHT = '180px';
+const MAX_GAME_CELLS_PER_ROW = 7;               // Based on the sizes chosen for the game cells, this is the number that fit on a 1080 screen.
+const GAME_CAPTIONS_ID_PREFIX = 'captions';     // Unique string prepended along with the index position of the game captions being added to the DOM.
+const GAME_IMAGE_ID_PREFIX = 'image';           // Unique string prepended along with the index position of the game image being added to the DOM.
+
 class StatsList {
+
     constructor(controller) {
-        this.controller = controller;
-        this.currentDate = new Date();
-        this.currentIndex = 0;
-        this.maxIndex = null;
-        this.gamesMetadata = [];
-        this.isModalDisplayed = false;
-        this.data = null;
+        this.controller = controller;           // We are passed a reference to our caller. Save it in an instance variable.                   
+        this.currentDate = new Date();          // Default to retrieving MLB statistics for the current date.
+        this.currentIndex = 0;                  // Focus will begin with first game of the day.
+        this.maxIndex = -1;                     // Will hold the last index of the last game. If there 15 games, this will be 14.
+        this.gamesMetadata = [];                // Array of objects containing the metadata we are capturing from the API.
+        this.isModalDisplayed = false;          // Boolean flag indicating whether the detailed overlay is present or not.
+        this.data = null;                       // Instance variable holding the complete JSON data object returned by the API.
     }
     
     /**
@@ -68,20 +79,21 @@ class StatsList {
                 this.storeMetadata(game);
                 gameIndex++;
                 let gameCaptions = document.createElement('div');
-                gameCaptions.classList.add('gameCaptions');
+                gameCaptions.id = `${GAME_CAPTIONS_ID_PREFIX}${gameIndex}`;     // Example: captions0 or captions14.
+                gameCaptions.classList.add('gameCaptions', 'hiddenCaption');     // COMPATIBILITY WARNING: IE does not support adding multiple CSS classes in one line.
                 let homeTeamNode = document.createElement('p');
-                homeTeamNode.classList.add('hiddenCaption');
+                //homeTeamNode.classList.add('hiddenCaption');
                 let homeTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].homeTeam.name}: ${this.gamesMetadata[gameIndex].homeTeam.score}`);
                 homeTeamNode.appendChild(homeTeamText);
                 gameCaptions.appendChild(homeTeamNode);
                 let awayTeamNode = document.createElement('p');
-                awayTeamNode.classList.add('hiddenCaption');
+                //awayTeamNode.classList.add('hiddenCaption');
                 let awayTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].awayTeam.name}: ${this.gamesMetadata[gameIndex].awayTeam.score}`);
                 awayTeamNode.appendChild(awayTeamText);
                 gameCaptions.appendChild(awayTeamNode);
-                let gameCell = document.createElement('div');
-                gameCell.classList.add('gameCell');
-                gameCell.id = gameIndex;
+                let gameImage = document.createElement('div');
+                gameImage.classList.add('gameImage');
+                gameImage.id = `${GAME_IMAGE_ID_PREFIX}${gameIndex}`;     // Example: image0 or image14.
 
                 if (game.content && game.content.editorial && game.content.editorial.recap && 
                     game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
@@ -91,14 +103,14 @@ class StatsList {
                     let desiredImageSrc = game.content.editorial.recap.mlb.image.cuts[15].src;
                     let imageElement = document.createElement('img')
                     imageElement.src = desiredImageSrc;
-                    gameCell.appendChild(imageElement);
+                    gameImage.appendChild(imageElement);
                 }
                 
-                gameCaptions.appendChild(gameCell);
+                gameCaptions.appendChild(gameImage);
 
                 let headlineNode = document.createElement('p');
                 headlineNode.classList.add('desc');
-                headlineNode.classList.add('hiddenCaption');
+                //headlineNode.classList.add('hiddenCaption');
                 let headlineText = document.createTextNode(this.gamesMetadata[gameIndex].headline);
                 headlineNode.appendChild(headlineText);
                 gameCaptions.appendChild(headlineNode);
@@ -113,6 +125,9 @@ class StatsList {
         gamesContainer.appendChild(gamesRow);
         rootElement.appendChild(gamesContainer);
         document.body.appendChild(rootElement);
+
+        // Apply focus to the first game.
+        this.addGameRowFocus();
     }
 
     storeMetadata(game) {
@@ -148,7 +163,7 @@ class StatsList {
      * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
      */
     onKeyPress(eventKeyName) {
-        console.log('In StatsList disp mod onKeyPress:', eventKeyName);
+        //console.log('In StatsList disp mod onKeyPress:', eventKeyName);
         switch (eventKeyName) {
             case 'ArrowLeft':
                 if (this.currentIndex === 0) { return false; }
@@ -166,6 +181,9 @@ class StatsList {
                 // TODO: Logic to check if at bottom of module, return false. Else...
                 this.updateFocus(eventKeyName);
                 break;
+            case 'Enter':
+                // TODO: Process.    
+                break;    
             case 'Escape':
                 if (this.isModalDisplayed) {
                     // TODO: Remove details modal dialog if displayed.
@@ -182,38 +200,82 @@ class StatsList {
      * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
      */
     updateFocus(eventKeyName) {
-        /**
-         * Notes to self:
-         * 7 games per row before wrapping so...
-         * o If press up and index ID of game is greater than 7, subtract 7 to get the ID of the div to gain focus. Else, ignore key press.
-         * o If press down and index ID of game + 7 is less than this.maxIndex, then add 7 to current index ID to get the new div to gain focus.
-         */
+        let nextIndex = null;
+
         switch (eventKeyName) {
             case 'ArrowLeft':
+                nextIndex = this.currentIndex - 1;
                 break;
             case 'ArrowRight':
-                this.currentIndex++;
-                let nextElement = document.getElementById(this.currentIndex);
-                let focusedElementStyles = getComputedStyle(nextElement);
-                //console.log('focusedElementStyles', focusedElementStyles);
-                let previousWidth = focusedElementStyles.width;
-                let previousHeight = focusedElementStyles.height;
-                console.log('previousWidth', previousWidth);
-                console.log('previousHeight', previousHeight);
-                nextElement.style.width = (parseFloat(previousWidth, 10) * 1.5) + 'px';
-                nextElement.style.height = (parseFloat(previousHeight, 10) * 1.5) + 'px';
-                nextElement.style.border = 'solid 5px red';
-                let headlineNode = nextElement.nextSibling;
-                headlineNode.style.width = (parseFloat(previousWidth, 10) * 1.5) + 'px';
-                headlineNode.classList.remove('hiddenCaption');
-                let awayElement = nextElement.previousSibling;
-                awayElement.classList.remove('hiddenCaption');
-                let homeElement = nextElement.previousSibling.previousSibling;
-                homeElement.classList.remove('hiddenCaption');
+                nextIndex = this.currentIndex + 1;
+                break;
+            case 'ArrowUp':
+                if (this.currentIndex - MAX_GAME_CELLS_PER_ROW >= 0) {
+                    nextIndex = this.currentIndex - MAX_GAME_CELLS_PER_ROW;
+                }
+                break;
+            case 'ArrowDown':
+                if (this.currentIndex + MAX_GAME_CELLS_PER_ROW <= this.maxIndex) {
+                    nextIndex = this.currentIndex + MAX_GAME_CELLS_PER_ROW;
+                }
                 break;
             default:
                 return false;
         }
+
+        // If we are moving to a new game cell, remove the current focus and add it to the next one
+        // gaining focus. Otherwise, we have clicked farther than we can go. Keep the focus we have.
+        if (nextIndex !== null) {
+            this.removeGameRowFocus();
+            this.currentIndex = nextIndex;
+            this.addGameRowFocus();
+        }
+    }
+
+    removeGameRowFocus() {
+        // Hide the captions above and below the game image.
+        let nextGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
+        nextGameCaptions.classList.add('hiddenCaption');
+
+        // Restore original image size.
+        let nextGameImage = document.getElementById(`${GAME_IMAGE_ID_PREFIX}${this.currentIndex}`);
+        nextGameImage.style.width = UNFOCUSED_IMAGE_WIDTH;
+        nextGameImage.style.height = UNFOCUSED_IMAGE_HEIGHT;
+
+        // Remove border around game.
+        nextGameImage.style.removeProperty('border');
+
+        // Restore original headline width so it wraps in a more compact space.
+        let headlineNode = nextGameImage.nextSibling;
+        headlineNode.style.width = UNFOCUSED_IMAGE_WIDTH;
+    }
+
+    addGameRowFocus() {
+        // Show the captions above and below the game image.
+        let nextGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
+        nextGameCaptions.classList.remove('hiddenCaption');
+
+        // Increase size of game image by 150%.
+        let nextGameImage = document.getElementById(`${GAME_IMAGE_ID_PREFIX}${this.currentIndex}`);
+        nextGameImage.style.width = FOCUSED_IMAGE_WIDTH;
+        nextGameImage.style.height = FOCUSED_IMAGE_HEIGHT;
+
+        // Add a border around game gaining focus.
+        nextGameImage.style.border = 'solid 5px red';
+
+        // Increase width of headline below image so it has more room and less line wrapping.
+        let headlineNode = nextGameImage.nextSibling;
+        headlineNode.style.width = FOCUSED_IMAGE_WIDTH;
+    }
+
+    /**
+     * For DOM element IDs consisting of a string followed by a number that corresponds to the 
+     * index position of the game in the API data, extract the index number. For example, if passed
+     * an ID of 'caption7' the method will return 7 as a number.
+     * @param {String} id 
+     */
+    getIndexFromId(id) {
+        return new Number(id.replace(/\D/g, '')).valueOf();
     }
 
 }
