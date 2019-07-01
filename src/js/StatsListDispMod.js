@@ -15,14 +15,17 @@ const NEXT_DATE_BUTTON_ID = 'nextDate';
 
 class StatsList {
 
-    constructor(controller) {
-        this.controller = controller;           // We are passed a reference to our caller. Save it in an instance variable.                   
-        this.currentDate = new Date();          // Default to retrieving MLB statistics for the current date.
-        this.currentIndex = 0;                  // Focus will begin with first game of the day.
-        this.maxIndex = -1;                     // Will hold the last index of the last game. If there 15 games, this will be 14.
+    constructor(controller, rootElement) {
+        this.controller = controller;           // We are passed a reference to the Controller object so that we can invoke its requestData() method.
+        this.rootElement = rootElement;         // We are passed a reference to the root DOM element to which we will attach our display module.               
+        this.currentDate = new Date();          // Defaut to retrieving MLB statistics for the current date.
+        this.currentIndex = 0;                  // Focus will begin in the grid with first game of the day.
+        this.maxIndex = -1;                     // Will hold the last index of the last game. Example: If there 15 games, this will be 14 (zero-based index).
         this.gamesMetadata = [];                // Array of objects containing the metadata we are capturing from the API.
         this.isModalDisplayed = false;          // Boolean flag indicating whether the detailed overlay is present or not.
         this.data = null;                       // Instance variable holding the complete JSON data object returned by the API.
+        this.gridHasFocus = false;              // Boolean flag indicating if we are in the grid or in the date buttons sections of the screen.
+        this.buttonIdHasFocus = '';             // Unique identifier of the date button that has focus when the grid is not in focus.
     }
     
     /**
@@ -44,23 +47,20 @@ class StatsList {
         // Update our instance variable with the data returned by the Controller.
         this.data = result;
         
-        // Set up the overall containers.
-        const rootElement = document.createElement('div');
-        rootElement.classList.add('bgImage');
+        // Estabish top level container for our display module.
         const gamesContainer = document.createElement('div');
         gamesContainer.classList.add('gamesContainer');
 
-        // Add date buttons, header, and grid to the screen.
+        // Add date buttons, header, and grid to top level container.
         gamesContainer.appendChild(this.buildDateButtons());
         gamesContainer.appendChild(this.buildHeader());
         gamesContainer.appendChild(this.buildGrid());
 
-        // Wrap up the overall containers.
-        rootElement.appendChild(gamesContainer);
-        document.body.appendChild(rootElement);
+        // Add top level container to the screen.
+        this.rootElement.appendChild(gamesContainer);
 
         // Apply focus to the first game.
-        this.addGameRowFocus();
+        this.addGridFocus();
     }
     
     /**
@@ -239,23 +239,45 @@ class StatsList {
      * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
      */
     onKeyPress(eventKeyName) {
-        //console.log('In StatsList disp mod onKeyPress:', eventKeyName);
+        // console.log('In StatsList disp mod onKeyPress:', eventKeyName);
         switch (eventKeyName) {
             case 'ArrowLeft':
-                if (this.currentIndex === 0) { return false; }
-                else { this.updateFocus(eventKeyName); }
+                if (this.gridHasFocus) {
+                    if (this.currentIndex === 0) { return false; }
+                    else { this.updateGridFocus(eventKeyName); }
+                }
+                else {  // Date buttons have focus.
+                    if (this.buttonIdHasFocus === PREVIOUS_DATE_BUTTON_ID) { return false; }
+                    else { this.updateDateButtonsFocus(eventKeyName); }
+                }
                 break;
             case 'ArrowRight': 
-                if (this.currentIndex === this.maxIndex) { return false; }
-                else { this.updateFocus(eventKeyName); }
+                if (this.gridHasFocus) {
+                    if (this.currentIndex === this.maxIndex) { return false; }
+                    else { this.updateGridFocus(eventKeyName); }
+                }
+                else {  // Date buttons have focus.
+                    if (this.buttonIdHasFocus === NEXT_DATE_BUTTON_ID) { return false; }
+                    else { this.toggleDateButtonsFocus(); }
+                }
                 break;
             case 'ArrowUp':
-                // TODO: Logic to check if at top of module, return false. Else...
-                this.updateFocus(eventKeyName);
+                if (this.gridHasFocus) {
+                    if (this.currentIndex - MAX_GAME_CELLS_PER_ROW >= 0) {
+                        this.updateGridFocus(eventKeyName);
+                    }
+                    else {  
+                        this.removeGridFocus();
+                        setDefaultDateButtonFocus();
+                    }
+                }
+                else {  // Date buttons have focus.
+                    return false;
+                }    
                 break;
             case 'ArrowDown':
                 // TODO: Logic to check if at bottom of module, return false. Else...
-                this.updateFocus(eventKeyName);
+                this.updateGridFocus(eventKeyName);
                 break;
             case 'Enter':
                 // TODO: Process.    
@@ -271,11 +293,18 @@ class StatsList {
     }
 
     /**
-     * After the display module has focus, it will call this internal method to remove focus from the div
-     * that is currently focused and to grant focus to the div we are moving toward. 
-     * @param {String} eventKeyName - Name of key pressed, eg., ArrowLeft, ArrowRight, Escape.
+     * After a key press is received by the display module, if the grid has or is gaining focus, 
+     * this method will be called to remove focus from the game that is currently focused and to 
+     * grant focus to the game the user is moving toward. 
+     * @param {String} eventKeyName - One of the following keys: 'ArrowLeft', 'ArrowRight', 'ArrowUp', or 'ArrowDown'.
+     * @param {Boolean} removeFocusOnly - If true, grid will lose focus so that date buttons can gain focus.
      */
-    updateFocus(eventKeyName) {
+    updateGridFocus(eventKeyName, removeFocusOnly = false) {
+        if (removeFocusOnly) {
+            this.removeGridFocus();
+            return;
+        }
+
         let nextIndex = null;
 
         switch (eventKeyName) {
@@ -286,9 +315,7 @@ class StatsList {
                 nextIndex = this.currentIndex + 1;
                 break;
             case 'ArrowUp':
-                if (this.currentIndex - MAX_GAME_CELLS_PER_ROW >= 0) {
-                    nextIndex = this.currentIndex - MAX_GAME_CELLS_PER_ROW;
-                }
+                nextIndex = this.currentIndex - MAX_GAME_CELLS_PER_ROW;
                 break;
             case 'ArrowDown':
                 if (this.currentIndex + MAX_GAME_CELLS_PER_ROW <= this.maxIndex) {
@@ -302,31 +329,43 @@ class StatsList {
         // If we are moving to a new game cell, remove the current focus and add it to the next one
         // gaining focus. Otherwise, we have clicked farther than we can go. Keep the focus we have.
         if (nextIndex !== null) {
-            this.removeGameRowFocus();
+            this.removeGridFocus();
             this.currentIndex = nextIndex;
-            this.addGameRowFocus();
+            this.addGridFocus();
         }
     }
 
-    removeGameRowFocus() {
+    /**
+     * Removes focus from the game in the grid that currently has focus.
+     */
+    removeGridFocus() {
         // Hide the captions above and below the game image.
-        let nextGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
-        nextGameCaptions.classList.add('hiddenCaption');
+        let currentGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
+        currentGameCaptions.classList.add('hiddenCaption');
 
         // Restore original image size.
-        let nextGameImage = document.getElementById(`${GAME_IMAGE_ID_PREFIX}${this.currentIndex}`);
-        nextGameImage.style.width = UNFOCUSED_IMAGE_WIDTH;
-        nextGameImage.style.height = UNFOCUSED_IMAGE_HEIGHT;
+        let currentGameImage = document.getElementById(`${GAME_IMAGE_ID_PREFIX}${this.currentIndex}`);
+        currentGameImage.style.width = UNFOCUSED_IMAGE_WIDTH;
+        currentGameImage.style.height = UNFOCUSED_IMAGE_HEIGHT;
 
         // Remove border around game.
-        nextGameImage.style.removeProperty('border');
+        currentGameImage.style.removeProperty('border');
 
         // Restore original headline width so it wraps in a more compact space.
-        let headlineNode = nextGameImage.nextSibling;
+        let headlineNode = currentGameImage.nextSibling;
         headlineNode.style.width = UNFOCUSED_IMAGE_WIDTH;
+
+        // Set flag indicating focus has been removed from the grid.
+        this.gridHasFocus = false;
     }
 
-    addGameRowFocus() {
+    /**
+     * Adds focus to the game in the grid that user is moving toward.
+     */
+    addGridFocus() {
+        // Technically, the current value of this.currentIndex is the index of the game that will gain focus below.
+        // It was just updated prior to invoking this method.
+
         // Show the captions above and below the game image.
         let nextGameCaptions = document.getElementById(`${GAME_CAPTIONS_ID_PREFIX}${this.currentIndex}`);
         nextGameCaptions.classList.remove('hiddenCaption');
@@ -342,6 +381,59 @@ class StatsList {
         // Increase width of headline below image so it has more room and less line wrapping.
         let headlineNode = nextGameImage.nextSibling;
         headlineNode.style.width = FOCUSED_IMAGE_WIDTH;
+
+        // Set flag indicating focus lies in the grid.
+        this.gridHasFocus = true;
+    }
+
+    /**
+     * After a key press is received by the display module, if the date buttons have or are gaining focus, 
+     * this method will be called to remove focus from the date button that is currently focused and to 
+     * grant focus to the date button that user is moving toward. 
+     * @param {String} eventKeyName - One of the following keys: 'ArrowLeft', 'ArrowRight', or 'ArrowDown'.
+     * @param {Boolean} removeFocusOnly - If true, date buttons will lose focus so that grid can gain focus.
+     */
+    updateDateButtonsFocus(eventKeyName, removeFocusOnly = false) {
+        if (removeFocusOnly) {
+            this.removeDateButtonsFocus();
+            return;
+        }
+
+        switch (eventKeyName) {
+            case 'ArrowLeft':
+                break;
+            case 'ArrowRight':
+                break;
+            case 'ArrowUp':
+                break;
+            case 'ArrowDown':
+                break;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Removes focus from the date button that currently has focus.
+     */
+    removeDateButtonsFocus() {
+        if (this.buttonIdHasFocus === '') { return; }
+
+        const focusedDateButton = document.getElementById(this.buttonIdHasFocus);
+        focusedDateButton.style.removeProperty('border');
+
+        // Reset ID indicating that focus has been removed from the date buttons.
+        this.buttonIdHasFocus = '';
+    }
+
+    /**
+     * Adds focus to the date button that user is moving toward.
+     */
+    addDateButtonsFocus() {
+        // Technically, the current value of this.buttonIdHasFocus is the ID of the button that will gain focus below.
+        // It was just updated prior to invoking this method.
+        const gainingFocusButton = document.getElementById(this.buttonIdHasFocus);
+        gainingFocusButton.style.border = 'solid 5px red';
     }
 
     /**
@@ -353,7 +445,6 @@ class StatsList {
     getIndexFromId(id) {
         return new Number(id.replace(/\D/g, '')).valueOf();
     }
-
 }
 
 export default StatsList;

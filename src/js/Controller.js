@@ -9,7 +9,15 @@ class Controller {
         this.loadDataMods();
         this.launchDisplayMods();
     }
-    
+
+    establishRootElement() {
+        const rootElement = document.createElement('div');
+        rootElement.id = 'root';
+        rootElement.classList.add('bgImage');
+        document.body.appendChild(rootElement);
+        return rootElement;
+    }
+
     //====================
     // Manage Data Modules
     //====================
@@ -43,26 +51,40 @@ class Controller {
     // Manage Display Modules
     //=======================
     /**
-     * The controller knows about all the display modules that are needed. It creates new instances
-     * of each desired display module and then calls the module's onCreate() method to build the
-     * module and alter what is seen on the screen. It then sets up listeners for key pressess
-     * that are also passed on to the display module that has focus.
+     * The controller establishes the root element attached to the body tag in the DOM.
+     * 
+     * The controller knows about all the display modules that are needed to be shown on the screen
+     * being built at this time. It creates new instances of each desired display module, passing it
+     * a reference to itself (so the display module can invoke methods on the controller) and a handle
+     * to the root element (so the display module can attach itself to the DOM).
+     * 
+     * The controller then calls the display module's onCreate() method to build the module.  
+     * 
+     * Finally, the controller sets up listeners for key pressess that are passed to the focused display module.
      */
     launchDisplayMods() {
-        let statsList = new StatsList(this);
+        const rootElement = this.establishRootElement();
+        let statsList = new StatsList(this, rootElement);
         statsList.onCreate();
         this.passKeyPressesToDisplayMod(statsList);
         // Launch future display modules based on some logic that determines what is needed.
     }
 
-    passKeyPressesToDisplayMod(dispMod) {       
+    passKeyPressesToDisplayMod(dispMod) {
+        // All key presses have default behavior turned off. This prevents the arrow keys from sliding
+        // the screen up/down/left/right when app is loaded in a web browser but due to screen real estate,
+        // is not quite 1920 x 1080 pixels and scroll bars have formed. Also, this prevents an Enter key
+        // press from submitting the screen (only really an issue with forms).
+
         // Arrow, Enter, and Escape keys are triggered by keydown event, not keypress. 
         document.addEventListener("keydown", function onEvent(event) {
+            event.preventDefault();
             dispMod.onKeyPress(event.key);
         });
-
+        
         // Regular keys not covered by keydown event are triggered by keypress.
         document.addEventListener("keypress", function(event) {
+            event.preventDefault();
             dispMod.onKeyPress(event.key);            
         });
     }
