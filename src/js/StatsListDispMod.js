@@ -1,9 +1,10 @@
 // This is a display module, the view in an MVC design pattern.
 import { getRequestedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
 
-// Index Constants
+// Game Image Index Constants
 const API_UNFOCUSED_IMAGE_INDEX = 16;           // From API: Image cut in index position 16 matches what we want for unfocused game cells: 209 x 118px.
 const API_FOCUSED_IMAGE_INDEX = 12;             // From API: Image cut in index position 12 matches what we want for focused game cells: 320 x 180px.
+const API_MODAL_IMAGE_INDEX = 6;                // From API: Image cut to use for enlarged modal dialog displaying detailed information about selected game.
 
 // Game Constants
 const UNFOCUSED_IMAGE_WIDTH = '209px';
@@ -11,7 +12,7 @@ const UNFOCUSED_IMAGE_HEIGHT = '118px';
 const FOCUSED_IMAGE_WIDTH = '320px';
 const FOCUSED_IMAGE_HEIGHT = '180px';
 const MAX_GAME_CELLS_PER_ROW = 7;               // Based on the sizes chosen for the game cells, this is the number that fit on a 1080 screen.
-const NO_SCORE = 'No Score';
+const NO_SCORE = 'No Score';                    // Ideally, we would want to have translations for this phrase in different languages, assuming API has non-English versions.
 
 // ID Constants
 const DISPLAY_MODULE_ID = 'gamesContainer';     // ID of the top level DOM element created by this display module, not to be confused with the true root
@@ -20,7 +21,13 @@ const GAME_CAPTIONS_ID_PREFIX = 'captions';     // Unique string prepended along
 const GAME_IMAGE_ID_PREFIX = 'image';           // Unique string prepended along with the index position of the game image being added to the DOM.
 const PREVIOUS_DATE_BUTTON_ID = 'prevDate';
 const NEXT_DATE_BUTTON_ID = 'nextDate';
-const DEFAULT_DATE_BUTTON_ID = 'prevDate';      // ID of the date button that will gain focus by default on an up key press from the grid. 
+const DEFAULT_DATE_BUTTON_ID = 'prevDate';      // ID of the date button that will gain focus by default on an up key press from the grid.
+const MODAL_DIALOG_ID = 'gameDetails';
+const MODAL_HEADLINE_ID = 'modalHeadline';
+const MODAL_IMAGE_ID = 'modalImage';
+const MODAL_SUBHEADING_ID = 'modalSubheading';
+const MODAL_BLURB_ID = 'modalBlurb';
+const MODAL_CONTRIBUTORS_ID = 'modalContributors';
 
 class StatsList {
 
@@ -73,15 +80,16 @@ class StatsList {
         gamesContainer.id = DISPLAY_MODULE_ID;
         gamesContainer.classList.add('gamesContainer');
     
-        // Add date buttons, header, and grid to top level container.
+        // Add date buttons, header, grid, and modal dialog to top level container.
         gamesContainer.appendChild(this.buildDateButtons());
         gamesContainer.appendChild(this.buildHeader());
         gamesContainer.appendChild(this.buildGrid());
+        gamesContainer.appendChild(this.buildDetailsModalDialog());
     
         // Add top level container to the screen.
         this.rootElement.appendChild(gamesContainer);
     
-        // Apply focus.
+        // Apply focus to grid unless date button previously had focus.
         if (this.buttonIdHasFocus === '') {
             this.addGridFocus();
         }
@@ -244,8 +252,126 @@ class StatsList {
         return gamesRow;
     }
 
+    /**
+     * Builds hidden modal dialog for displaying detailed data about a chosen game. Dialog is initially built without any data.
+     */
+    buildDetailsModalDialog() {
+        /* Sample HTML.
+        <div id="gameDetails" class="modal">
+            <div class="modalContent">
+                <h5>Yanks ride 9-run 7th to London Series sweep</h5>
+                <img src="https://img.mlbstatic.com/mlb-images/image/private/w_640,h_360,f_jpg,c_fill,g_auto/mlb/phtsbsbfbmpqfbzlamx0.jpg" alt="Baseball Game">
+                <h6>Boston Red Sox: 8 / New York Yankees: 12</h6>
+                <p>"LONDON -- After nine hours and six minutes of baseball on the artificial turf of London Stadium this weekend, the Yankees offered some advice for the next inhabitants of their makeshift clubhouse, which will await the arrival of the Cardinals and Cubs next June for another installment of the London"</p>
+                <p>-- Bryan Hoch</p>
+            /div>
+        </div>
+        */
+
+        // Modal Dialog Container
+        const modalDialog = document.createElement('div');
+        modalDialog.id = MODAL_DIALOG_ID;
+        modalDialog.classList.add('modal');
+
+        // Modal Content Container
+        const modalContent = document.createElement('div');
+        modalContent.classList.add('modalContent');
+        modalDialog.appendChild(modalContent);
+
+        // Main Heading
+        const headlineNode = document.createElement('h5');
+        headlineNode.id = MODAL_HEADLINE_ID;
+        modalContent.appendChild(headlineNode);
+        
+        // Image
+        const imageNode = document.createElement('img');
+        imageNode.id = MODAL_IMAGE_ID;
+        //modalContent.appendChild(imageNode);
+        
+        // Subheading
+        const subheadingNode = document.createElement('p');
+        subheadingNode.id = MODAL_SUBHEADING_ID;
+        //modalContent.appendChild(subheadingNode);
+
+        // Div Wrapper for Image and Subheading to keep them together on the left.
+        const imgSubheadingDiv = document.createElement('div');
+        imgSubheadingDiv.classList.add('modelImageSubheading');
+        imgSubheadingDiv.appendChild(imageNode);
+        imgSubheadingDiv.appendChild(subheadingNode);
+        modalContent.appendChild(imgSubheadingDiv);
+
+        // Editorial Blurb
+        const blurbNode = document.createElement('p');
+        blurbNode.id = MODAL_BLURB_ID;
+        //modalContent.appendChild(blurbNode);
+        
+        // Contributors
+        const contributorsNode = document.createElement('p');
+        contributorsNode.id = MODAL_CONTRIBUTORS_ID;
+        //modalContent.appendChild(contributorsNode);
+
+        // Div Wrapper for Editorial Blurb and Contributors to keep them together to the right of the image and subheading.
+        const blurbAuthorsDiv = document.createElement('div');
+        blurbAuthorsDiv.classList.add('modalBlurbAuthors');
+        blurbAuthorsDiv.appendChild(blurbNode);
+        blurbAuthorsDiv.appendChild(contributorsNode);
+        modalContent.appendChild(blurbAuthorsDiv);
+        
+        // Return top level DOM element to caller.
+        return modalDialog;
+    }
+    
+    /**
+     * Launches modal dialog containing additional metadata regarding a specific game. Triggered when user presses
+     * Enter key while a game has focus.
+     */
+    launchDetailsModalDialog() {
+        // Get handles to all the DOM elements we need to alter in the modal dialog.
+        const headlineNode = document.getElementById(MODAL_HEADLINE_ID);
+        const imageNode = document.getElementById(MODAL_IMAGE_ID);
+        const subheadingNode = document.getElementById(MODAL_SUBHEADING_ID);
+        const blurbNode = document.getElementById(MODAL_BLURB_ID);
+        const contributorsNode = document.getElementById(MODAL_CONTRIBUTORS_ID);
+        
+        // Clear contents from an earlier modal dialog load (if any).
+        while (headlineNode.firstChild) { headlineNode.removeChild(headlineNode.firstChild); }
+        imageNode.src = '';
+        while (subheadingNode.firstChild) { subheadingNode.removeChild(subheadingNode.firstChild); }
+        while (blurbNode.firstChild) { blurbNode.removeChild(blurbNode.firstChild); }
+        while (contributorsNode.firstChild) { contributorsNode.removeChild(contributorsNode.firstChild); }
+        
+        // Add new content to modal dialog based on focused and selected game.
+        const headlineText = document.createTextNode(this.gamesMetadata[this.currentIndex].headline);
+        headlineNode.appendChild(headlineText);
+        
+        imageNode.src = this.gamesMetadata[this.currentIndex].modalDialogImageUrl;
+        
+        const subheading1 = `${this.gamesMetadata[this.currentIndex].homeTeam.name}: ${this.gamesMetadata[this.currentIndex].homeTeam.score}`;
+        const subheading2 = `${this.gamesMetadata[this.currentIndex].awayTeam.name}: ${this.gamesMetadata[this.currentIndex].awayTeam.score}`;
+        const subheadingText = document.createTextNode(`${subheading1} / ${subheading2}`);
+        subheadingNode.appendChild(subheadingText);
+        
+        const blurbText = document.createTextNode(this.gamesMetadata[this.currentIndex].blurb);
+        blurbNode.appendChild(blurbText);
+        
+        const contributorsText = document.createTextNode(`-- ${this.gamesMetadata[this.currentIndex].contributors}`);
+        contributorsNode.appendChild(contributorsText);
+
+        // Show modal dialog.
+        const modalDialog = document.getElementById(MODAL_DIALOG_ID);
+        modalDialog.style.display = 'block';
+        this.isModalDisplayed = true;
+    }
+
     storeMetadata(game) {
-        let metadataObj = {homeTeam: {name: '', score: ''}, awayTeam: {name: '', score: ''}, headline: ''};
+        let metadataObj = {
+            homeTeam: {name: '', score: ''}, 
+            awayTeam: {name: '', score: ''}, 
+            headline: '',
+            modalDialogImageUrl: '',
+            blurb: '',
+            contributors: ''
+        };
 
         // Home Team
         if (game.teams && game.teams.home && game.teams.home.team && game.teams.home.team.name) {
@@ -283,6 +409,31 @@ class StatsList {
             metadataObj.headline = game.content.editorial.recap.mlb.headline;
         }
 
+        // Modal Dialog Details:
+        // -- URL of enlarged image to show.
+        if (game.content && game.content.editorial && game.content.editorial.recap && 
+            game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.image && 
+            game.content.editorial.recap.mlb.image.cuts) 
+        {
+            metadataObj.modalDialogImageUrl = game.content.editorial.recap.mlb.image.cuts[API_MODAL_IMAGE_INDEX].src;
+        }
+        // -- Editorial blurb.
+        // Note: It appears to always trail off in midsentence, therefore tack on an ellipsis.
+        if (game.content && game.content.editorial && game.content.editorial.recap && 
+            game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.blurb) 
+        {
+            metadataObj.blurb = `${game.content.editorial.recap.mlb.blurb}...`;
+        }
+        // -- Contributor(s).
+        if (game.content && game.content.editorial && game.content.editorial.recap && 
+            game.content.editorial.recap.mlb && game.content.editorial.recap.mlb.contributors) 
+        {
+            // Contributors array contains objects of the form {name: "Firstname Lastname"} so we need to extract name property.
+            let namesArray = game.content.editorial.recap.mlb.contributors.map(nameObj => nameObj.name); 
+            metadataObj.contributors = namesArray.join(', ');
+        }
+
+        // Add metadata object, built for the current game, to the array.
         this.gamesMetadata.push(metadataObj);
     }
 
@@ -292,6 +443,10 @@ class StatsList {
      */
     onKeyPress(eventKeyName) {
         // console.log('In StatsList disp mod onKeyPress:', eventKeyName);
+
+        // Ignore all key presses except Escape when details modal dialog is present.
+        if (this.isModalDisplayed && eventKeyName !== 'Escape') { return false; }
+
         const removeFocusOnly = true;
 
         switch (eventKeyName) {
@@ -345,7 +500,7 @@ class StatsList {
                 break;
             case 'Enter':
                 if (this.gridHasFocus) {
-                    // TODO: Show modal dialog with details on the focused game.
+                    this.launchDetailsModalDialog();
                 }
                 else {  // Date buttons have focus.
                     if (this.buttonIdHasFocus === PREVIOUS_DATE_BUTTON_ID) {
@@ -364,7 +519,10 @@ class StatsList {
                 break;    
             case 'Escape':
                 if (this.isModalDisplayed) {
-                    // TODO: Remove details modal dialog if displayed.
+                    // Hide modal dialog.
+                    const modalDialog = document.getElementById(MODAL_DIALOG_ID);
+                    modalDialog.style.display = 'none';
+                    this.isModalDisplayed = false;
                 }
                 break;
             default:

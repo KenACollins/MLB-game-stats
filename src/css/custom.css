@@ -1,3 +1,4 @@
+/* Styling for standard HTML tags. */
 body {
     color: white;   /* Change default font color from black to white due to dark background. */
 }
@@ -11,6 +12,12 @@ h4 {
     position: relative;
     top: 70px;
     left: 60px;
+}
+
+/* Headline at top of modal dialog. */
+h5 {
+    font-size: 30px;
+    font-weight: 700;
 }
 
 /* Background image spanning entire screen. Assigned to root element. */
@@ -84,4 +91,52 @@ p.desc {
 .gameImage img {
     width: 100%;
     height: 100%;
+}
+
+/* === MODAL DIALOG === */
+/* Modal container stretching full screen and grayed out (background). */
+.modal {
+    display: none;                  /* Hidden by default. */
+    position: fixed;                /* Stay in place. */
+    z-index: 1;                     /* Sit on top. */
+    padding-top: 190px;             /* Location of the box. */
+    left: 0;
+    top: 0;
+    width: 100%;                    /* Full width. */
+    height: 100%;                   /* Full height. */
+    overflow: hidden;               /* Disable scroll if content does not fit. */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+  
+  /* Modal content for the inner dialog that is not grayed out. */
+.modalContent {
+    color: black;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    height: 600px;
+}
+
+#modalSubheading {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.modelImageSubheading {
+    float: left;
+    width: 700px;
+}
+
+#modalBlurb, #modalContributors {
+    margin-top: 20px;
+}
+
+.modalBlurbAuthors {
+    float: left;
+    width: 600px;
+    font-size: 24px;
+    margin-left: 50px;
 }
