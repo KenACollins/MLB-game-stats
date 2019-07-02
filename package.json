@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Displays statistics of Major League Baseball games played on a particular date, utilizing public MLB API.",
   "private": true,
+  "engines": {
+    "node": "10.15.1",
+    "npm": "6.4.1"
+  },
   "scripts": {
     "build": "webpack -p",
     "start": "webpack ./src/js/index.js ./dist/bundle.js"
