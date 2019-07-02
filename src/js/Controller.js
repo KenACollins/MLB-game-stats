@@ -90,4 +90,4 @@ class Controller {
     }
 }
 
-new Controller();
+export default Controller;

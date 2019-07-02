@@ -1,0 +1,25 @@
+{
+  "name": "mlb",
+  "version": "1.0.0",
+  "description": "Displays statistics of Major League Baseball games played on a particular date, utilizing public MLB API.",
+  "private": true,
+  "scripts": {
+    "build": "webpack -p",
+    "watch": "webpack --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KenACollins/MLB-game-stats.git"
+  },
+  "author": "Ken A Collins",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KenACollins/MLB-game-stats/issues"
+  },
+  "homepage": "https://github.com/KenACollins/MLB-game-stats#readme",
+  "devDependencies": {
+    "webpack": "^4.35.2",
+    "webpack-cli": "^3.3.5"
+  }
+}
