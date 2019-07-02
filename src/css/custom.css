@@ -1,5 +1,6 @@
 /* Styling for standard HTML tags. */
 body {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
     color: white;   /* Change default font color from black to white due to dark background. */
 }
 
@@ -12,6 +13,10 @@ h4 {
     position: relative;
     top: 70px;
     left: 60px;
+    font-size: 2.28rem;
+    font-weight: 400;
+    line-height: 110%;
+    margin: 1.52rem 0 .912rem 0;
 }
 
 /* Headline at top of modal dialog. */
@@ -60,7 +65,6 @@ h5 {
     display: inline-block;
     text-transform: uppercase;
     vertical-align: middle;
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
     font-weight: normal;
 }
 
@@ -138,7 +142,7 @@ p.desc {
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
-    height: 600px;
+    height: 550px;
 }
 
 #modalSubheading {
@@ -164,8 +168,8 @@ p.desc {
 
 .escapeTip {
     position: relative;
-    bottom: -86px;
-    right: -520px;
+    bottom: -120px;
+    right: -560px;
     font-size: 16px;
     display: inline-block;          /* Shrinkwrap div around content. */
     /* color: #7b1fa2; */
