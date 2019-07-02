@@ -116,39 +116,19 @@ class StatsList {
         //=====================
         // Previous Date Button
         //=====================
-        // Define the previous date button. Apply material design styling.
+        // Define the previous date button.
         const prevDateButton = document.createElement('a');
         prevDateButton.id = PREVIOUS_DATE_BUTTON_ID;
-        prevDateButton.classList.add('waves-effect', 'waves-light', 'btn-large');
-        const prevDateButtonText = document.createTextNode('Previous Date');
-
-        // Define the icon to be placed inside the previous date button.
-        const iconLeft = document.createElement('i');
-        iconLeft.classList.add('material-icons', 'left');
-        const iconLeftText = document.createTextNode('chevron_left');
-        iconLeft.appendChild(iconLeftText);
-
-        // Insert child nodes within previous date button.
-        prevDateButton.appendChild(iconLeft);
+        const prevDateButtonText = document.createTextNode('< Previous Date');
         prevDateButton.appendChild(prevDateButtonText);
 
         //=================
         // Next Date Button
         //=================
-        // Define the next date button. Apply material design styling.
+        // Define the next date button.
         const nextDateButton = document.createElement('a');
         nextDateButton.id = NEXT_DATE_BUTTON_ID;
-        nextDateButton.classList.add('waves-effect', 'waves-light', 'btn-large');
-        const nextDateButtonText = document.createTextNode('Next Date');
-
-        // Define the icon to be placed inside the next date button.
-        const iconRight = document.createElement('i');
-        iconRight.classList.add('material-icons', 'right');
-        const iconRightText = document.createTextNode('chevron_right');
-        iconRight.appendChild(iconRightText);
-
-        // Insert child nodes within next date button.
-        nextDateButton.appendChild(iconRight);
+        const nextDateButtonText = document.createTextNode('Next Date >');
         nextDateButton.appendChild(nextDateButtonText);
 
         //==============================
@@ -253,21 +233,9 @@ class StatsList {
     }
 
     /**
-     * Builds hidden modal dialog for displaying detailed data about a chosen game. Dialog is initially built without any data.
+     * Builds hidden modal dialog for later displaying detailed data about a chosen game. Dialog is initially built without any data.
      */
     buildDetailsModalDialog() {
-        /* Sample HTML.
-        <div id="gameDetails" class="modal">
-            <div class="modalContent">
-                <h5>Yanks ride 9-run 7th to London Series sweep</h5>
-                <img src="https://img.mlbstatic.com/mlb-images/image/private/w_640,h_360,f_jpg,c_fill,g_auto/mlb/phtsbsbfbmpqfbzlamx0.jpg" alt="Baseball Game">
-                <h6>Boston Red Sox: 8 / New York Yankees: 12</h6>
-                <p>"LONDON -- After nine hours and six minutes of baseball on the artificial turf of London Stadium this weekend, the Yankees offered some advice for the next inhabitants of their makeshift clubhouse, which will await the arrival of the Cardinals and Cubs next June for another installment of the London"</p>
-                <p>-- Bryan Hoch</p>
-            /div>
-        </div>
-        */
-
         // Modal Dialog Container
         const modalDialog = document.createElement('div');
         modalDialog.id = MODAL_DIALOG_ID;
@@ -286,12 +254,10 @@ class StatsList {
         // Image
         const imageNode = document.createElement('img');
         imageNode.id = MODAL_IMAGE_ID;
-        //modalContent.appendChild(imageNode);
         
         // Subheading
         const subheadingNode = document.createElement('p');
         subheadingNode.id = MODAL_SUBHEADING_ID;
-        //modalContent.appendChild(subheadingNode);
 
         // Div Wrapper for Image and Subheading to keep them together on the left.
         const imgSubheadingDiv = document.createElement('div');
@@ -303,12 +269,10 @@ class StatsList {
         // Editorial Blurb
         const blurbNode = document.createElement('p');
         blurbNode.id = MODAL_BLURB_ID;
-        //modalContent.appendChild(blurbNode);
         
         // Contributors
         const contributorsNode = document.createElement('p');
         contributorsNode.id = MODAL_CONTRIBUTORS_ID;
-        //modalContent.appendChild(contributorsNode);
 
         // Div Wrapper for Editorial Blurb and Contributors to keep them together to the right of the image and subheading.
         const blurbAuthorsDiv = document.createElement('div');
@@ -316,6 +280,20 @@ class StatsList {
         blurbAuthorsDiv.appendChild(blurbNode);
         blurbAuthorsDiv.appendChild(contributorsNode);
         modalContent.appendChild(blurbAuthorsDiv);
+
+        // Provide tip to user that pressing Escape key removes modal dialog.
+        const escapeNode = document.createElement('div');
+        escapeNode.classList.add('escapeTip');
+        const escapeKeySymbol = document.createElement('div');
+        escapeKeySymbol.classList.add('escapeKey');
+        const escapeKeyBlurb = document.createTextNode('Esc');
+        escapeKeySymbol.appendChild(escapeKeyBlurb);
+        const escapeBlurb1 = document.createTextNode('Press');
+        const escapeBlurb2 = document.createTextNode('key to close dialog');
+        escapeNode.appendChild(escapeBlurb1);
+        escapeNode.appendChild(escapeKeySymbol);
+        escapeNode.appendChild(escapeBlurb2);
+        blurbAuthorsDiv.appendChild(escapeNode);
         
         // Return top level DOM element to caller.
         return modalDialog;
