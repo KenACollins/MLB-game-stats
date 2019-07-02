@@ -142,7 +142,7 @@ class StatsList {
 
     /**
      * Builds the header that appears above the grid, for example:
-     * "Stats for Sat Jun 29 2019: 15 total games, 15 editorial recaps available:".
+     * "Stats for Sat Jun 29 2019: 15 total games, 15 editorial recaps available".
      */
     buildHeader() {
         if (!this.data) { return null; }
@@ -160,7 +160,7 @@ class StatsList {
                     countRecaps++;
                 }
             });
-            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial recaps available:`);
+            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial recaps available`);
         }
 
         header.appendChild(headerText);
