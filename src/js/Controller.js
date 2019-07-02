@@ -1,6 +1,6 @@
 // This is the controller module in an MVC design pattern that includes data and display modules.
 import { getStats } from './GetStatsDataMod.js';
-// import { cannedData } from './cannedData.js';
+// import cannedData from './cannedData.json';
 import StatsList from './StatsListDispMod.js';
 
 class Controller {
