@@ -160,7 +160,10 @@ class StatsList {
                     countRecaps++;
                 }
             });
-            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial recaps available`);
+
+            let recapBlurb = 'recaps';
+            if (countRecaps === 1) { recapBlurb = 'recap'; }
+            headerText = document.createTextNode(`Stats for ${getUserFriendlyDateFromApiDate(this.data.dates[0].date)}: ${this.data.totalGames} total games, ${countRecaps} editorial ${recapBlurb} available`);
         }
 
         header.appendChild(headerText);
