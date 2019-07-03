@@ -121,7 +121,7 @@ Absolutely no third party libraries or frameworks were used:
 
 * HTML5 - The sole HTML5 launch page was hand coded from scratch.
 * CSS3 - The CSS3 is all customized and residing in a stylesheet. There are no inline styles. No third party CSS libraries were used. The previous and next date buttons were coded from scratch.
-* JavaScript - ES6+ features were used but all the code is pure vanilla JavaScript, including the DOM building and manipulation. No React, Angular, Vue, or even jQuery were used.
+* JavaScript - ES6+ features were used but all the code is pure vanilla JavaScript, including the DOM building and manipulation. No React, Angular, Vue, or even jQuery was used.
 
 ### Third Party Tools
 

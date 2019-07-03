@@ -97,6 +97,7 @@ h5 {
 /* The description metadata caption requires a strict width setting or else it won't word wrap and would spill out into next sibling div. */
 p.desc {
     width: 209px;
+    height: 42px;
 }
 
 /* Hide the captions for unfocused game cells. */
