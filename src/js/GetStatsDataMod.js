@@ -4,7 +4,7 @@ import { getApiFormattedDate } from './utilities/dateUtils.js';
 const getStats = async (referenceDate = new Date()) => {
     const requestedDateFormatted = getApiFormattedDate(referenceDate);
     try {
-        const response = await fetch(`http://statsapi.mlb.com/api/v1/schedule?hydrate=game(content(editorial(recap))),decisions&date=${requestedDateFormatted}&sportId=1`);
+        const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=game(content(editorial(recap))),decisions&date=${requestedDateFormatted}&sportId=1`);
         const json = await response.json();
         return json;
     }
