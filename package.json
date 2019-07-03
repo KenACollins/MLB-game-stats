@@ -9,8 +9,7 @@
   },
   "scripts": {
     "build": "webpack -p",
-    "start": "webpack ./src/js/index.js ./dist/bundle.js",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false && npm run build"
+    "start": "webpack ./src/js/index.js ./dist/bundle.js"
   },
   "repository": {
     "type": "git",
