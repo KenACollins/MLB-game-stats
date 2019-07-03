@@ -54,6 +54,10 @@ Display a details screen or overlay when selecting an item with the Enter key or
 
 Try out the application! It is currently up and running on my website at URL http://www.kenacollins.com/mlb/dist/index.html.
 
+Note that the above URL points to an index.html file in the distribution build folder which loads the bundled bundle.js file that 
+incorporates babel tranpilation. Therefore, theoretically any browser can be used. I tested the app in Firefox 67.0.4 (64-bit), 
+Chrome 75.0.3770.100 (Official Build) (64-bit), and Microsoft Edge 42.17134.1.0.
+
 ### Design
 
 I coded the solution utilizing an MVC - Model/View/Controller - design pattern where Controller.js is the controller, StatsListDispMod.js
