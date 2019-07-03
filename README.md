@@ -9,7 +9,7 @@ The application allows a user to view Major League Baseball game statistics for 
 
 The solution encompasses the public MLB API. Documentation is not available but an example of the URL is:
 
-http://statsapi.mlb.com/api/v1/schedule?hydrate=game(content(editorial(recap))),decisions&date=2019-06-30&sportId=1
+https://statsapi.mlb.com/api/v1/schedule?hydrate=game(content(editorial(recap))),decisions&date=2019-06-30&sportId=1
 
 The date parameter can be substituted for another date using the yyyy-mm-dd format.
 
@@ -38,7 +38,7 @@ Instead of using the hardcoded JSON feed URL, make the URL dynamic to always sho
 
 #### Enable Previous and Next Date Selection
 
-Support loading and displaying the http://statsapi.mlb.com/api/v1/schedule for adjacent days.
+Support loading and displaying the https://statsapi.mlb.com/api/v1/schedule for adjacent days.
 
 #### Add Visual Aesthetics
 
