@@ -146,13 +146,13 @@ However, all is not lost, the user can navigate the grid to find out the games t
 
 #### Grid
 
-The games are displayed in a grid, sized to fit seven games per row with wrapping to successive rows. 
+The games are displayed in a grid, sized to fit 7 games per row with wrapping to successive rows. 
 
 I decided that displaying games in a single line would not be an optimal user experience because what happens with the games that are off 
 screen on either side? Would the user be happy about pressing an arrow key at the right or left edge of the screen to cause the next game to 
 appear without knowing what other games are hidden? 
 
-I felt the answer was 'No!' and I went with a design that display all of the games on the screen, after conducting an adequate review of the data
+I felt the answer was 'No!' and I went with a design that displays all of the games on the screen, after conducting an adequate review of the data
 and determining there never appear to be more than 15 games in a single day, and I can easily fit 15 games within a full HD 1920 x 1080 pixel space.
 
 The grid is displayed on the screen with rectangular boxes representing each game. If the game has completed and there is an MLB editorial recap 
@@ -166,7 +166,8 @@ navigates through the grid. Games in progress will continually update the scores
 Above the grid is a header that indicates for which date the games data pertains along with an indication of the number of editorial recaps
 available (this is provided so the user does not freak out if he or she sees gray rectangles in place of game photos).
 
-Example: Stats for Sun Jun 30 2019: 15 total games, 15 editorial recaps available
+Example: 
+Stats for Sun Jun 30 2019: 15 total games, 15 editorial recaps available
 
 #### Focused Game
 
@@ -180,7 +181,7 @@ Below the enlarged photo will be a headline blurb from a sports writer.
 
 #### Focused and Selected Game
 
-When a user presses Enter on a focused game to select it, a larg details modal dialog appears, darkening out the rest of the screen around it,
+When a user presses Enter on a focused game to select it, a large details modal dialog appears, darkening out the rest of the screen around it,
 and displays more information about the chosen game including a longer blurb from a sports writer than was seen when the game was merely
 focused. 
 
@@ -189,7 +190,7 @@ need to press 'Esc' when done.
 
 #### Previous/Next Date Selection
 
-Above the header are two buttons labeled '< PREVIOUS DATE' and 'NEXT DATE >'. When the user presses the Up arrow key from the top row of the grid, 
+Above the header are two buttons labeled < PREVIOUS DATE and NEXT DATE >. When the user presses the Up arrow key from the top row of the grid, 
 focus shifts to the date buttons. The user can navigate right and left between these two buttons.
 
 There is a heading on-screen at all times reminding the user what date is current. Pressing the previous date button makes a request of the API for 
