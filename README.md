@@ -52,9 +52,9 @@ Display a details screen or overlay when selecting an item with the Enter key or
 
 ### Cloud Hosting
 
-Try out the application! It is currently up and running on my website at URL http://www.kenacollins.com/disney.
+Try out the application! It is currently up and running on my website at URL https://www.kenacollins.com/disney.
 
-Note that the above URL points to an index.html file which loads the bundled bundle.js file that incorporates babel transpilation. 
+Note that the above URL launches an index.html file with the bundled bundle.js file that incorporates babel transpilation. 
 Therefore, theoretically any browser can be used. 
 
 I tested the app in Firefox 67.0.4 (64-bit), Chrome 75.0.3770.100 (Official Build) (64-bit), and Microsoft Edge 42.17134.1.0.
