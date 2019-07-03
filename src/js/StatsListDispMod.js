@@ -685,6 +685,21 @@ class StatsList {
     getIndexFromId(id) {
         return new Number(id.replace(/\D/g, '')).valueOf();
     }
+
+    /**
+     * The Controller invokes this method when the display module is destroyed.  It removes all DOM elements created 
+     * by this display module. This is also where event listeners would be removed and timer IDs (like those returned
+     * in an animation utilizing setInterval()) would be cleared.
+     */
+    onDestroy() {
+        // Delete previous state of the display module if the date buttons were clicked.
+        const displayModuleTopElement = document.getElementById(DISPLAY_MODULE_ID);
+        if (displayModuleTopElement !== null) {
+            displayModuleTopElement.parentNode.removeChild(displayModuleTopElement);
+            this.gamesMetadata.splice(0, this.gamesMetadata.length);    // Empty array of previous metadata.
+        }
+    }
+
 }
 
 export default StatsList;

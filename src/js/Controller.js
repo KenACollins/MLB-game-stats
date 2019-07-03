@@ -7,6 +7,7 @@ class Controller {
     constructor() {
         this.dataMods = new Map();
         this.loadDataMods();
+        this.displayMods = [];
         this.launchDisplayMods();
     }
 
@@ -61,10 +62,16 @@ class Controller {
      * The controller then calls the display module's onCreate() method to build the module.  
      * 
      * Finally, the controller sets up listeners for key pressess that are passed to the focused display module.
+     * 
+     * Some time later, like when the user is navigating to a new screen, the Controller will destroy
+     * unwanted display modules. Note that this is pretty drastic, what if the user presses the Back button
+     * to return to the previous screen? It would probably be better to keep a history of display modules
+     * for a screen, rather than destroy them, in case the user returns so the previous state can be restored.
      */
     launchDisplayMods() {
         const rootElement = this.establishRootElement();
         let statsList = new StatsList(this, rootElement);
+        this.displayMods.push(statsList);   // Keep track of this display module for later on when we destroy it.
         statsList.onCreate();
         this.passKeyPressesToDisplayMod(statsList);
         // Launch future display modules based on some logic that determines what is needed.
@@ -87,6 +94,14 @@ class Controller {
             event.preventDefault();
             dispMod.onKeyPress(event.key);            
         });
+    }
+
+    destroyDisplayMods() {
+        while (this.displayMods.length) {
+            let currentDisplayMod = this.displayMods.shift();
+            currentDisplayMod.onDestroy();
+
+        }
     }
 }
 
