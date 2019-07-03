@@ -8,8 +8,7 @@
     "npm": "6.4.1"
   },
   "scripts": {
-    "build": "webpack -p",
-    "start": "webpack ./src/js/index.js ./dist/bundle.js"
+    "build": "webpack -p"
   },
   "repository": {
     "type": "git",

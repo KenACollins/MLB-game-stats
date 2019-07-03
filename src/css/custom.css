@@ -136,7 +136,7 @@ p.desc {
     background-color: rgba(0,0,0,0.6); /* Black w/ opacity set to darkening setting. */
 }
   
-  /* Modal content for the inner dialog that is not grayed out. */
+/* Modal content for the inner dialog that is not grayed out. */
 .modalContent {
     color: black;
     background-color: #fefefe;
@@ -170,7 +170,7 @@ p.desc {
 
 .escapeTip {
     position: relative;
-    bottom: -120px;
+    bottom: -100px;
     right: -560px;
     font-size: 16px;
     display: inline-block;          /* Shrinkwrap div around content. */

@@ -77,6 +77,10 @@ class Controller {
         // Launch future display modules based on some logic that determines what is needed.
     }
 
+    /**
+     * Registers event listeners for key presses and passes them on to the display module that has focus.
+     * @param {Object} dispMod - the display module that has focus 
+     */
     passKeyPressesToDisplayMod(dispMod) {
         // All key presses have default behavior turned off. This prevents the arrow keys from sliding
         // the screen up/down/left/right when app is loaded in a web browser but due to screen real estate,
@@ -84,13 +88,13 @@ class Controller {
         // press from submitting the screen (only really an issue with forms).
 
         // Arrow, Enter, and Escape keys are triggered by keydown event, not keypress. 
-        document.addEventListener("keydown", function onEvent(event) {
+        document.addEventListener('keydown', function onEvent(event) {
             event.preventDefault();
             dispMod.onKeyPress(event.key);
         });
         
         // Regular keys not covered by keydown event are triggered by keypress.
-        document.addEventListener("keypress", function(event) {
+        document.addEventListener('keypress', function(event) {
             event.preventDefault();
             dispMod.onKeyPress(event.key);            
         });

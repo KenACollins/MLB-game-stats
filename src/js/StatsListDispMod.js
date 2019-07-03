@@ -1,5 +1,5 @@
 // This is a display module, the view in an MVC design pattern.
-import { getRequestedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
+import { getRequestedDate, getApiFormattedDate, getUserFriendlyDateFromApiDate } from './utilities/dateUtils.js';
 
 // Game Image Index Constants
 const API_UNFOCUSED_IMAGE_INDEX = 16;           // From API: Image cut in index position 16 matches what we want for unfocused game cells: 209 x 118px.
@@ -48,9 +48,6 @@ class StatsList {
      * The Controller invokes this method the first and every time the stats list grid is launched.  Initial setup is performed here.
      */
     onCreate() {
-        // Make initial call to API for yesterday's date. Wait for results before building screen.
-        //const offsetDayCount = -1;
-        //this.currentDate = getRequestedDate(offsetDayCount, this.currentDate);
         this.controller.requestData(this, 'receiveStatsData', 'getStats', this.currentDate);
     }
     
@@ -81,10 +78,18 @@ class StatsList {
         gamesContainer.classList.add('gamesContainer');
     
         // Add date buttons, header, grid, and modal dialog to top level container.
-        gamesContainer.appendChild(this.buildDateButtons());
-        gamesContainer.appendChild(this.buildHeader());
-        gamesContainer.appendChild(this.buildGrid());
-        gamesContainer.appendChild(this.buildDetailsModalDialog());
+        // Warning: Must check for null, appendChild() can't handle it!!!
+        const dateButtonsDiv = this.buildDateButtons();
+        if (dateButtonsDiv !== null) { gamesContainer.appendChild(dateButtonsDiv); }
+
+        const header = this.buildHeader();
+        if (header !== null) { gamesContainer.appendChild(header); }
+        
+        const gamesRow = this.buildGrid();
+        if (gamesRow !== null) { gamesContainer.appendChild(gamesRow); }
+        
+        const modalDialog = this.buildDetailsModalDialog();
+        if (modalDialog !== null) { gamesContainer.appendChild(modalDialog); }
     
         // Add top level container to the screen.
         this.rootElement.appendChild(gamesContainer);
@@ -102,10 +107,6 @@ class StatsList {
      * Adds previous and next date buttons to the screen allowing for other stats to be loaded.
      */
     buildDateButtons() {
-        /*
-        <a class="waves-effect waves-light btn-large"><i class="material-icons left">chevron_left</i>Previous Date</a>
-        <a class="waves-effect waves-light btn-large"><i class="material-icons right">chevron_right</i>Next Date</a>
-        */
         //=================
         // Create Container
         //=================
@@ -150,8 +151,9 @@ class StatsList {
         const header = document.createElement('h4');
         let headerText = null;
         
-        if (this.data.totalGames === 0) {
-            headerText = document.createTextNode("We're sorry, there is no data available for the date you requested.");
+        if ( this.data.totalGames === 0 || typeof this.data.totalGames === 'undefined') {
+            const requestedDateFormatted = getApiFormattedDate(this.currentDate);
+            headerText = document.createTextNode(`We're sorry, there is no data available for the ${getUserFriendlyDateFromApiDate(requestedDateFormatted)} date you requested.`);
         }
         else {
             let countRecaps = 0;
@@ -187,7 +189,7 @@ class StatsList {
             gameIndex++;
             let gameCaptions = document.createElement('div');
             gameCaptions.id = `${GAME_CAPTIONS_ID_PREFIX}${gameIndex}`;     // Example: captions0 or captions14.
-            gameCaptions.classList.add('gameCaptions', 'hiddenCaption');     // COMPATIBILITY WARNING: IE does not support adding multiple CSS classes in one line.
+            gameCaptions.classList.add('gameCaptions', 'hiddenCaption');    // COMPATIBILITY WARNING: IE does not support adding multiple CSS classes in one line.
             let homeTeamNode = document.createElement('p');
             let homeTeamText = document.createTextNode(`${this.gamesMetadata[gameIndex].homeTeam.name}: ${this.gamesMetadata[gameIndex].homeTeam.score}`);
             homeTeamNode.appendChild(homeTeamText);
@@ -344,6 +346,11 @@ class StatsList {
         this.isModalDisplayed = true;
     }
 
+    /**
+     * Extracts selective pieces of metadata from the API's returned JSON object for later display
+     * when a game is focused and selected.
+     * @param {Object} game 
+     */
     storeMetadata(game) {
         let metadataObj = {
             homeTeam: {name: '', score: ''}, 
@@ -613,7 +620,7 @@ class StatsList {
      * After a key press is received by the display module, if the date buttons have or are gaining focus, 
      * this method will be called to remove focus from the date button that is currently focused and to 
      * grant focus to the date button that user is moving toward. 
-     * @param {String} eventKeyName - One of the following keys: 'ArrowLeft', 'ArrowRight', or 'ArrowDown'.
+     * @param {String} eventKeyName - One of the following keys: 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'.
      */
     updateDateButtonsFocus(eventKeyName) {
         let nextButtonId = null;
