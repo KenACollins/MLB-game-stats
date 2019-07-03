@@ -40,7 +40,7 @@ Instead of using the hardcoded JSON feed URL, make the URL dynamic to always sho
 
 Support loading and displaying the http://statsapi.mlb.com/api/v1/schedule for adjacent days.
 
-#### Add Animation
+#### Add Visual Aesthetics
 
 Incorporate transitions, animations, or any other visual aesthetics.
 
@@ -62,8 +62,8 @@ is the view, and GetStatsDataMod.js is the model.
 While I only have one view and one model for this project, I envision the UI on a grander scale, incorporating all kinds of components 
 on different screens needing all kinds of data from different sources. 
 
-I use the term 'display module' to refer to the visual view components. I use the term 'data model' to refer to the back-end side of the
-client that communicates with the file system and external sources to serve up the data the UI needs.
+I use the term 'display module' to refer to the visual view components. I use the term 'data module' to refer to the model calculations of 
+the back-end side of the client that communicates with the file system and external sources to serve up the data the UI needs.
 
 Details follow.
 
@@ -93,7 +93,7 @@ onDestroy() method.
 StatsListDispMod.js is a display module geared toward displaying MLB games info on the screen.
 
 It asks the Controller to invoke the MLB stats API for the current date and pass back the results. Once the data has been returned, 
-the display module builds four elements for the screen:
+the display module builds four components for the screen:
 
 * Previous and Next Date buttons
 * Main header
@@ -110,7 +110,8 @@ navigate from the grid to the date buttons and vice versa.
 GetStatsDataMod.js is a data module geared toward retrieving the MLB statistics. It is called by the Controller and its results are passed
 on to the StatsListDispMod.js display module.
 
-This data module is coded with the latest ES7 async/await feature to handle the asynchronous nature of the API call.
+This data module is coded with the latest ES7 async/await feature to handle the asynchronous nature of the API call. The webpack babel setup
+included a step where I installed an additional babel-polyfill package to deal with async/await and cutting edge features like it.
 
 ### Third Party Frameworks
 
@@ -138,17 +139,34 @@ Also, I installed and configured babel so that ES6+ features not supported by a 
 #### Current Date by Default
 
 When the MLB app first loads, it retrieves data for the current date. This is usually not desirable as many games may not have started
-and few will have completed, leading to the absence of an editorial recap and photo. The user is subjected to gray rectangles as 
-placeholders for games not yet reviewed by sports writers. However, all is not lost, the user can navigate the grid to find out the games
-that are scheduled to ascertain which teams are matched up.
+and few will have completed, leading to the absence of editorial recaps and photos. The user is subjected to gray rectangles as 
+placeholders for games not yet reviewed by sports writers. 
+
+However, all is not lost, the user can navigate the grid to find out the games that are scheduled to ascertain which teams are matched up.
 
 #### Grid
 
-A grid is displayed on the screen with rectangular boxes representing each game. If the game has completed and there is an MLB
-editorial recap available, a thumbnail image of the game will appear, otherwise a gray rectangle placeholder is substituted.
+The games are displayed in a grid, sized to fit seven games per row with wrapping to successive rows. 
 
-Regardless of whether a game has completed or not, the names of the home and away teams are known and can be seen as the user
+I decided that displaying games in a single line would not be an optimal user experience because what happens with the games that are off 
+screen on either side? Would the user be happy about pressing an arrow key at the right or left edge of the screen to cause the next game to 
+appear without knowing what other games are hidden? 
+
+I felt the answer was 'No!' and I went with a design that display all of the games on the screen, after conducting an adequate review of the data
+and determining there never appear to be more than 15 games in a single day, and I can easily fit 15 games within a full HD 1920 x 1080 pixel space.
+
+The grid is displayed on the screen with rectangular boxes representing each game. If the game has completed and there is an MLB editorial recap 
+available, a thumbnail image of the game will appear, otherwise a gray rectangle placeholder is substituted.
+
+Regardless of whether a game has completed or not, the names of the home and away teams are known and these matchups can be seen as the user
 navigates through the grid. Games in progress will continually update the scores if one checks back again in a little while.
+
+#### Header
+
+Above the grid is a header that indicates for which date the games data pertains along with an indication of the number of editorial recaps
+available (this is provided so the user does not freak out if he or she sees gray rectangles in place of game photos).
+
+Example: Stats for Sun Jun 30 2019: 15 total games, 15 editorial recaps available
 
 #### Focused Game
 
@@ -162,7 +180,7 @@ Below the enlarged photo will be a headline blurb from a sports writer.
 
 #### Focused and Selected Game
 
-When a user presses Enter on a focused game to select it, a details modal dialog appears, darkening out the rest of the screen around it,
+When a user presses Enter on a focused game to select it, a larg details modal dialog appears, darkening out the rest of the screen around it,
 and displays more information about the chosen game including a longer blurb from a sports writer than was seen when the game was merely
 focused. 
 
@@ -171,10 +189,11 @@ need to press 'Esc' when done.
 
 #### Previous/Next Date Selection
 
-Above the grid are two buttons labeled '< PREVIOUS DATE' and 'NEXT DATE >'. When the user presses the Up arrow key from the top row of the grid, 
-focus shifts to the date buttons. There is a heading on-screen at all times reminding the user what date is current. Pressing the previous date
-button makes a request of the API for the data of the day before the current date, while pressing the next date button retrieves data one day in
-the future of the current date.
+Above the header are two buttons labeled '< PREVIOUS DATE' and 'NEXT DATE >'. When the user presses the Up arrow key from the top row of the grid, 
+focus shifts to the date buttons. The user can navigate right and left between these two buttons.
+
+There is a heading on-screen at all times reminding the user what date is current. Pressing the previous date button makes a request of the API for 
+the data of the day before the current date, while pressing the next date button retrieves data one day in the future of the current date.
 
 If a user wishes to go back several days in the past, all he or she needs to do is repeatedly press Enter while the previous date button has focus.
 The same is true for repeatedly pressing Enter when the next date button has focus. These actions are possible because focus remains within the
