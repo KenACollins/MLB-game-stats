@@ -158,9 +158,9 @@ Webpack was installed and configured with extra loaders to handle my custom CSS 
 
 Also, I installed and configured babel so that ES6+ features not supported by a particular deployment will not impede the application.
 
-### Features
+## Features
 
-#### Current Date by Default
+### Current Date by Default
 
 When the MLB app first loads, it retrieves data for the current date. This is usually not desirable as many games may not have started
 and few will have completed, leading to the absence of editorial recaps and photos. The user is subjected to gray rectangles as 
@@ -168,7 +168,7 @@ placeholders for games not yet reviewed by sports writers.
 
 However, all is not lost, the user can navigate the grid to find out the games that are scheduled to ascertain which teams are matched up.
 
-#### Grid
+### Grid
 
 The games are displayed in a grid, sized to fit 7 games per row with wrapping to successive rows. 
 
@@ -185,7 +185,7 @@ available, a thumbnail image of the game will appear, otherwise a gray rectangle
 Regardless of whether a game has completed or not, the names of the home and away teams are known and these matchups can be seen as the user
 navigates through the grid. Games in progress will continually update the scores if one checks back again in a little while.
 
-#### Header
+### Header
 
 Above the grid is a header that indicates for which date the games data pertains along with an indication of the number of editorial recaps
 available (this is provided so the user does not freak out if he or she sees gray rectangles in place of game photos).
@@ -193,7 +193,7 @@ available (this is provided so the user does not freak out if he or she sees gra
 Example: 
 Stats for Sun Jun 30 2019: 15 total games, 15 editorial recaps available
 
-#### Focused Game
+### Focused Game
 
 When a game gains focus, its photo, if available, will quickly increase in size to be 150% of its original size. It will be encased in
 a reddish/orange border, and a few details about the game will appear above and below the enlarged photo. 
@@ -203,7 +203,7 @@ Scores for games in progress get updated in real time.
 
 Below the enlarged photo will be a headline blurb from a sports writer.
 
-#### Focused and Selected Game
+### Focused and Selected Game
 
 When a user presses Enter on a focused game to select it, a large details modal dialog appears, darkening out the rest of the screen around it,
 and displays more information about the chosen game including a longer blurb from a sports writer than was seen when the game was merely
@@ -212,7 +212,7 @@ focused.
 All key presses are disabled except for the Escape key to close the dialog.  There is a legend in the corner of the dialog indicating the 
 need to press 'Esc' when done.
 
-#### Previous/Next Date Selection
+### Previous/Next Date Selection
 
 Above the header are two buttons labeled < PREVIOUS DATE and NEXT DATE >. When the user presses the Up arrow key from the top row of the grid, 
 focus shifts to the date buttons. The user can navigate right and left between these two buttons.
