@@ -1,5 +1,19 @@
-# MLB-game-stats
-Displays statistics of Major League Baseball games played on a particular date, utilizing public MLB API. 
+# Television User Interface Featuring MLB Game Statistics
+This web application displays statistics of Major League Baseball games played on a particular date, utilizing public MLB API. 
+The unique aspect, however, is that the application is designed to run on a television or set-top box and can be simulated in a
+web browser that responds only to the keys of a keyboard that match those of a remote control: arrow keys (UP, DOWN, LEFT, RIGHT), 
+ENTER, and Esc (for BACK). 
+
+## Try It Out!
+Launch https://www.kenacollins.com/mlb in your web browser. 
+
+By default, the current date's baseball games are displayed but this usually results in a lot of gray placeholder rectangles due
+to games that have not yet started or do not yet have a sports writer's editorial recap. 
+
+1. Press UP arrow and then when the < PREVIOUS DATE button has focus (as indicated by a red outline border) press ENTER repeatedly to load data for a desired past date.
+2. Press DOWN arrow to return to the grid.
+3. Press RIGHT, LEFT, DOWN, and UP arrow keys to navigate within the grid. As each game gains focus, data (home team and score, away team and score, sports writer blurb) appears above and below the photo now enlarged to 150% of its original size.
+4. When a game has focus, press ENTER to load a modal dialog that presents a larger image along with a longer sports writer description. Press Esc key to close dialog.
 
 ## Specifications
 
@@ -52,7 +66,7 @@ Display a details screen or overlay when selecting an item with the Enter key or
 
 ### Cloud Hosting
 
-Try out the application! It is currently up and running on my website at URL https://www.kenacollins.com/disney.
+Try out the application! It is currently up and running on my website at URL https://www.kenacollins.com/mlb.
 
 Note that the above URL launches an index.html file with the bundled bundle.js file that incorporates babel transpilation. 
 Therefore, theoretically any browser can be used. 
