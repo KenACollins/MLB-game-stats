@@ -2,7 +2,7 @@
 This web application displays statistics of Major League Baseball games played on a particular date, utilizing public MLB API. 
 The unique aspect, however, is that the application is designed to run on a television or set-top box and can be simulated in a
 web browser that responds only to the keys of a keyboard that match those of a remote control: arrow keys (UP, DOWN, LEFT, RIGHT), 
-ENTER, and Esc (for BACK). 
+ENTER, and Esc (for BACK). Browser resolution needs to be set at 1920 pixels wide (or greater) by 1080 pixels high (or greater).
 
 ## Try It Out!
 Launch https://www.kenacollins.com/mlb in your web browser. 
