@@ -86,6 +86,11 @@ the back-end side of the client that communicates with the file system and exter
 
 Details follow.
 
+#### Supplemental Diagrams
+
+Flowchart:    https://www.kenacollins.com/flow.pdf
+Architecture: https://www.kenacollins.com/arch.pdf
+
 #### Controller.js Controller
 
 The Controller knows about the display modules and the data modules. It is the starting point and manages the needs of both.
