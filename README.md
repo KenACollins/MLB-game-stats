@@ -88,8 +88,8 @@ Details follow.
 
 #### Supplemental Diagrams
 
-Flowchart:    https://www.kenacollins.com/flow.pdf
-Architecture: https://www.kenacollins.com/arch.pdf
+* Flowchart:    https://www.kenacollins.com/flow.pdf
+* Architecture: https://www.kenacollins.com/arch.pdf
 
 #### Controller.js Controller
 
